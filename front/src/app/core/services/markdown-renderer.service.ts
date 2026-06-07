@@ -81,11 +81,10 @@ export class MarkdownRendererService {
 
       const diagramPanel = container.createElement('div');
       diagramPanel.className = 'plantuml-panel plantuml-diagram';
-      const image = container.createElement('img');
-      image.src = `https://www.plantuml.com/plantuml/svg/${encodePlantUml(source)}`;
-      image.alt = title;
-      image.loading = 'lazy';
-      diagramPanel.append(image);
+      diagramPanel.append(
+        this.diagramImage(container, source, title, 'light'),
+        this.diagramImage(container, this.darkPlantUmlSource(source), title, 'dark')
+      );
 
       const sourcePanel = container.createElement('div');
       sourcePanel.className = 'plantuml-panel plantuml-source is-hidden';
@@ -113,6 +112,49 @@ export class MarkdownRendererService {
     button.setAttribute('aria-pressed', String(active));
     button.textContent = label;
     return button;
+  }
+
+  private diagramImage(
+    container: Document,
+    source: string,
+    title: string,
+    theme: 'dark' | 'light'
+  ): HTMLImageElement {
+    const image = container.createElement('img');
+    image.className = `plantuml-image plantuml-image-${theme}`;
+    image.src = `https://www.plantuml.com/plantuml/svg/${encodePlantUml(source)}`;
+    image.alt = title;
+    image.loading = 'lazy';
+    return image;
+  }
+
+  private darkPlantUmlSource(source: string): string {
+    const darkStyle = `
+skinparam backgroundColor #0f0c14
+skinparam defaultFontColor #e7e1ec
+skinparam ArrowColor #c084fc
+skinparam ArrowFontColor #cfc1d9
+skinparam activity {
+  BackgroundColor #1b1722
+  BorderColor #8b5cf6
+  FontColor #e7e1ec
+  DiamondBackgroundColor #241b2e
+  DiamondBorderColor #a855f7
+  DiamondFontColor #e7e1ec
+}
+skinparam partition {
+  BackgroundColor #121018
+  BorderColor #675674
+  FontColor #e7e1ec
+}
+skinparam note {
+  BackgroundColor #2a2233
+  BorderColor #8b5cf6
+  FontColor #e7e1ec
+}
+`;
+
+    return source.replace(/@startuml\s*/i, (start) => `${start}\n${darkStyle}`);
   }
 
   private assetUrl(path: string): string {

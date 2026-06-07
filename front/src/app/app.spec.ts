@@ -231,4 +231,25 @@ Alice -> Bob: Hello
     expect(sourcePanel.textContent).toContain('Alice -> Bob: Hello');
     expect(sourceButton.getAttribute('aria-pressed')).toBe('true');
   });
+
+  it('should generate light and dark PlantUML diagram variants', async () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(
+        fixture.nativeElement.querySelectorAll('.plantuml-diagram img')
+      ).toHaveLength(2);
+    });
+
+    const lightImage = fixture.nativeElement.querySelector(
+      '.plantuml-image-light'
+    ) as HTMLImageElement;
+    const darkImage = fixture.nativeElement.querySelector(
+      '.plantuml-image-dark'
+    ) as HTMLImageElement;
+    expect(lightImage.src).not.toBe(darkImage.src);
+    expect(darkImage.alt).toBe(lightImage.alt);
+  });
 });

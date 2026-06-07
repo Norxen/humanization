@@ -216,9 +216,9 @@ app-markdown-viewer .plantuml-diagram {
   padding: 24px;
   overflow: auto;
   background:
-    linear-gradient(rgba(168, 85, 247, .025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(168, 85, 247, .025) 1px, transparent 1px),
-    #fdfcff;
+    linear-gradient(rgba(192, 132, 252, .035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(192, 132, 252, .035) 1px, transparent 1px),
+    #0f0c14;
   background-size: 24px 24px;
 }
 
@@ -230,6 +230,14 @@ app-markdown-viewer .plantuml-diagram img {
   border-radius: 0;
   background: transparent;
   box-shadow: none;
+}
+
+app-markdown-viewer .plantuml-image-light {
+  display: none;
+}
+
+app-markdown-viewer .plantuml-image-dark {
+  display: block;
 }
 
 app-markdown-viewer .plantuml-source pre {
