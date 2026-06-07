@@ -90,6 +90,7 @@ Alice -> Bob: Hello
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    vi.restoreAllMocks();
   });
 
   it('should create the app', () => {
@@ -113,6 +114,7 @@ Alice -> Bob: Hello
   });
 
   it('should load the next markdown document', async () => {
+    const scrollTo = vi.spyOn(window, 'scrollTo').mockImplementation(() => undefined);
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
 
@@ -128,6 +130,47 @@ Alice -> Bob: Hello
       expect(fixture.nativeElement.querySelector('h1')?.textContent).toContain(
         'Story Brief'
       );
+    });
+
+    expect(scrollTo).toHaveBeenCalledWith({
+      top: 0,
+      left: 0,
+      behavior: 'auto'
+    });
+  });
+
+  it('should scroll to the top after loading the previous document', async () => {
+    const scrollTo = vi.spyOn(window, 'scrollTo').mockImplementation(() => undefined);
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('button.next')).toBeTruthy();
+    });
+
+    fixture.nativeElement.querySelector('button.next').click();
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('h1')?.textContent).toContain(
+        'Story Brief'
+      );
+    });
+
+    scrollTo.mockClear();
+    fixture.nativeElement.querySelector('app-page-navigation button:not(.next)').click();
+
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('h1')?.textContent).toContain(
+        'Game Design Index'
+      );
+    });
+
+    expect(scrollTo).toHaveBeenCalledWith({
+      top: 0,
+      left: 0,
+      behavior: 'auto'
     });
   });
 

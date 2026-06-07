@@ -24,4 +24,18 @@ export class App implements OnInit {
     this.sidebarOpen.set(false);
     void this.store.selectPage(index);
   }
+
+  async goPrevious(): Promise<void> {
+    await this.store.previous();
+    this.scrollToDocumentTop();
+  }
+
+  async goNext(): Promise<void> {
+    await this.store.next();
+    this.scrollToDocumentTop();
+  }
+
+  private scrollToDocumentTop(): void {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }
 }

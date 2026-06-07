@@ -36,8 +36,8 @@
         [previousPage]="store.previousPage()"
         [nextPage]="store.nextPage()"
         (documentSelected)="store.selectPath($event)"
-        (previous)="store.previous()"
-        (next)="store.next()"
+        (previous)="goPrevious()"
+        (next)="goNext()"
       />
       @if (store.loading()) {
         <div class="loading-bar"></div>
