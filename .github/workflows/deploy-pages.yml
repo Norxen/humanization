@@ -1,5 +1,8 @@
 name: Deploy Angular to GitHub Pages
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 on:
   push:
     branches:
@@ -52,7 +55,6 @@ jobs:
         uses: actions/upload-pages-artifact@v4
         with:
           path: front/dist/front/browser
-          include-hidden-files: true
 
   deploy:
     environment:
