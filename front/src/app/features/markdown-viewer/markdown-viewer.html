@@ -24,3 +24,37 @@
     (next)="next.emit()"
   />
 </article>
+
+@if (lightboxImage(); as image) {
+  <div
+    class="diagram-lightbox"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="image.alt"
+    (click)="closeLightbox()"
+  >
+    <div class="diagram-lightbox-panel" (click)="stopPropagation($event)">
+      <div class="diagram-lightbox-toolbar">
+        <span>{{ image.alt }}</span>
+        <div class="diagram-lightbox-actions">
+          <button type="button" (click)="zoomOut()" aria-label="Zoom out">&#8722;</button>
+          <button class="zoom-level" type="button" (click)="resetZoom()" aria-label="Reset zoom">
+            {{ lightboxZoomPercentage() }}%
+          </button>
+          <button type="button" (click)="zoomIn()" aria-label="Zoom in">+</button>
+          <button class="close-button" type="button" (click)="closeLightbox()" aria-label="Close diagram">
+            &#215;
+          </button>
+        </div>
+      </div>
+
+      <div class="diagram-lightbox-viewport" (wheel)="handleZoomWheel($event)">
+        <img
+          [src]="image.src"
+          [alt]="image.alt"
+          [style.width.%]="lightboxZoom() * 100"
+        >
+      </div>
+    </div>
+  </div>
+}

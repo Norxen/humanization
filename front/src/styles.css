@@ -157,6 +157,23 @@ a { color: inherit; text-decoration: none; }
 :root[data-theme='light'] app-markdown-viewer .plantuml-diagram img.plantuml-image-dark {
   display: none !important;
 }
+:root[data-theme='light'] app-markdown-viewer .diagram-lightbox {
+  background: rgba(31, 22, 38, .7);
+}
+:root[data-theme='light'] app-markdown-viewer .diagram-lightbox-toolbar {
+  color: #403547;
+}
+:root[data-theme='light'] app-markdown-viewer .diagram-lightbox-actions button {
+  color: #5f5467;
+  background: #fff;
+}
+:root[data-theme='light'] app-markdown-viewer .diagram-lightbox-viewport {
+  background:
+    linear-gradient(rgba(139, 63, 209, .025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(139, 63, 209, .025) 1px, transparent 1px),
+    #fdfcff;
+  background-size: 24px 24px;
+}
 
 :root[data-theme='light'] app-page-navigation button {
   color: #302938;

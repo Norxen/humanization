@@ -230,6 +230,7 @@ app-markdown-viewer .plantuml-diagram img {
   border-radius: 0;
   background: transparent;
   box-shadow: none;
+  cursor: zoom-in;
 }
 
 app-markdown-viewer .plantuml-diagram img.plantuml-image-light {
@@ -246,6 +247,105 @@ app-markdown-viewer .plantuml-source pre {
   border: 0;
   border-radius: 0;
   box-shadow: none;
+}
+
+app-markdown-viewer .diagram-lightbox {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(5, 3, 8, .86);
+  backdrop-filter: blur(12px);
+  animation: lightbox-in .18s ease both;
+}
+
+app-markdown-viewer .diagram-lightbox-panel {
+  width: min(1500px, 100%);
+  height: min(900px, calc(100vh - 48px));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: 0 34px 100px rgba(0, 0, 0, .58);
+}
+
+app-markdown-viewer .diagram-lightbox-toolbar {
+  min-height: 58px;
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 9px 10px 9px 18px;
+  border-bottom: 1px solid var(--line);
+  color: #d9cfe1;
+  background: var(--surface-raised);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+app-markdown-viewer .diagram-lightbox-actions {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+app-markdown-viewer .diagram-lightbox-actions button {
+  min-width: 38px;
+  height: 38px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: #cfc4d7;
+  background: var(--background);
+  font-size: 16px;
+  cursor: pointer;
+  transition: color .15s ease, border-color .15s ease, background .15s ease;
+}
+
+app-markdown-viewer .diagram-lightbox-actions button:hover {
+  border-color: rgba(168, 85, 247, .48);
+  color: #fff;
+  background: var(--surface-hover);
+}
+
+app-markdown-viewer .diagram-lightbox-actions .zoom-level {
+  min-width: 68px;
+  color: var(--accent-bright);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+app-markdown-viewer .diagram-lightbox-actions .close-button {
+  margin-left: 7px;
+  font-size: 21px;
+}
+
+app-markdown-viewer .diagram-lightbox-viewport {
+  flex: 1;
+  overflow: auto;
+  padding: 28px;
+  background:
+    linear-gradient(rgba(192, 132, 252, .035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(192, 132, 252, .035) 1px, transparent 1px),
+    #0f0c14;
+  background-size: 24px 24px;
+}
+
+app-markdown-viewer .diagram-lightbox-viewport img {
+  display: block;
+  max-width: none;
+  height: auto;
+  margin: 0 auto;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  transition: width .16s ease;
 }
 
 app-markdown-viewer .markdown-body table {
@@ -289,6 +389,10 @@ app-markdown-viewer .markdown-body hr {
   from { opacity: 0; transform: translateY(8px); }
 }
 
+@keyframes lightbox-in {
+  from { opacity: 0; }
+}
+
 @media (max-width: 560px) {
   app-markdown-viewer .toolbar { padding: 0 18px; }
   app-markdown-viewer .meta { display: none; }
@@ -303,4 +407,20 @@ app-markdown-viewer .markdown-body hr {
   app-markdown-viewer .plantuml-controls { width: 100%; }
   app-markdown-viewer .plantuml-controls button { flex: 1; }
   app-markdown-viewer .plantuml-diagram { padding: 14px; }
+  app-markdown-viewer .diagram-lightbox { padding: 0; }
+  app-markdown-viewer .diagram-lightbox-panel {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    border-radius: 0;
+  }
+  app-markdown-viewer .diagram-lightbox-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 12px;
+  }
+  app-markdown-viewer .diagram-lightbox-actions { width: 100%; }
+  app-markdown-viewer .diagram-lightbox-actions button { flex: 1; }
+  app-markdown-viewer .diagram-lightbox-actions .close-button { margin-left: 0; }
+  app-markdown-viewer .diagram-lightbox-viewport { padding: 14px; }
 }

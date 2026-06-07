@@ -259,4 +259,41 @@ Alice -> Bob: Hello
 
     expect(document.documentElement.dataset['theme']).toBe('light');
   });
+
+  it('should open PlantUML diagrams in a zoomable lightbox', async () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('.plantuml-image-dark')).toBeTruthy();
+    });
+
+    const diagram = fixture.nativeElement.querySelector(
+      '.plantuml-image-dark'
+    ) as HTMLImageElement;
+    diagram.click();
+    fixture.detectChanges();
+
+    const lightbox = fixture.nativeElement.querySelector('.diagram-lightbox');
+    const lightboxImage = fixture.nativeElement.querySelector(
+      '.diagram-lightbox-viewport img'
+    ) as HTMLImageElement;
+    expect(lightbox).toBeTruthy();
+    expect(document.body.style.overflow).toBe('hidden');
+    expect(lightboxImage.style.width).toBe('100%');
+
+    fixture.nativeElement.querySelector('[aria-label="Zoom in"]').click();
+    fixture.detectChanges();
+    expect(lightboxImage.style.width).toBe('125%');
+
+    fixture.nativeElement.querySelector('[aria-label="Reset zoom"]').click();
+    fixture.detectChanges();
+    expect(lightboxImage.style.width).toBe('100%');
+
+    fixture.nativeElement.querySelector('[aria-label="Close diagram"]').click();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.diagram-lightbox')).toBeNull();
+    expect(document.body.style.overflow).toBe('');
+  });
 });

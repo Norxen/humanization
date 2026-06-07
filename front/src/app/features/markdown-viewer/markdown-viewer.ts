@@ -1,11 +1,20 @@
-import { Component, ViewEncapsulation, input, output } from '@angular/core';
+import {
+  Component,
+  HostListener,
+  OnDestroy,
+  ViewEncapsulation,
+  computed,
+  inject,
+  input,
+  output,
+  signal
+} from '@angular/core';
 import {
   DocumentDescriptor,
   LoadedDocument
 } from '../../core/models/document-page.model';
 import { PageNavigation } from '../../shared/page-navigation/page-navigation';
 import { AppUrlService } from '../../core/services/app-url.service';
-import { inject } from '@angular/core';
 
 @Component({
   selector: 'app-markdown-viewer',
@@ -14,8 +23,11 @@ import { inject } from '@angular/core';
   styleUrl: './markdown-viewer.css',
   encapsulation: ViewEncapsulation.None
 })
-export class MarkdownViewer {
+export class MarkdownViewer implements OnDestroy {
   private readonly appUrl = inject(AppUrlService);
+  readonly lightboxImage = signal<{ src: string; alt: string } | null>(null);
+  readonly lightboxZoom = signal(1);
+  readonly lightboxZoomPercentage = computed(() => Math.round(this.lightboxZoom() * 100));
   readonly document = input.required<LoadedDocument>();
   readonly previousPage = input<DocumentDescriptor>();
   readonly nextPage = input<DocumentDescriptor>();
@@ -26,6 +38,12 @@ export class MarkdownViewer {
   handleDocumentClick(event: MouseEvent): void {
     const target = event.target;
     if (!(target instanceof Element)) {
+      return;
+    }
+
+    const diagramImage = target.closest<HTMLImageElement>('.plantuml-image');
+    if (diagramImage && getComputedStyle(diagramImage).display !== 'none') {
+      this.openLightbox(diagramImage);
       return;
     }
 
@@ -46,6 +64,55 @@ export class MarkdownViewer {
       event.preventDefault();
       this.documentSelected.emit(documentPath);
     }
+  }
+
+  @HostListener('document:keydown.escape')
+  closeLightbox(): void {
+    if (!this.lightboxImage()) {
+      return;
+    }
+
+    this.lightboxImage.set(null);
+    this.lightboxZoom.set(1);
+    document.body.style.overflow = '';
+  }
+
+  ngOnDestroy(): void {
+    document.body.style.overflow = '';
+  }
+
+  zoomIn(): void {
+    this.setZoom(this.lightboxZoom() + 0.25);
+  }
+
+  zoomOut(): void {
+    this.setZoom(this.lightboxZoom() - 0.25);
+  }
+
+  resetZoom(): void {
+    this.lightboxZoom.set(1);
+  }
+
+  handleZoomWheel(event: WheelEvent): void {
+    event.preventDefault();
+    this.setZoom(this.lightboxZoom() + (event.deltaY < 0 ? 0.15 : -0.15));
+  }
+
+  stopPropagation(event: Event): void {
+    event.stopPropagation();
+  }
+
+  private openLightbox(image: HTMLImageElement): void {
+    this.lightboxImage.set({
+      src: image.currentSrc || image.src,
+      alt: image.alt || 'PlantUML diagram'
+    });
+    this.lightboxZoom.set(1);
+    document.body.style.overflow = 'hidden';
+  }
+
+  private setZoom(zoom: number): void {
+    this.lightboxZoom.set(Math.min(3, Math.max(0.5, Number(zoom.toFixed(2)))));
   }
 
   private togglePlantUmlView(button: HTMLButtonElement): void {
