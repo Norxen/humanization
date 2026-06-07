@@ -232,12 +232,12 @@ app-markdown-viewer .plantuml-diagram img {
   box-shadow: none;
 }
 
-app-markdown-viewer .plantuml-image-light {
-  display: none;
+app-markdown-viewer .plantuml-diagram img.plantuml-image-light {
+  display: none !important;
 }
 
-app-markdown-viewer .plantuml-image-dark {
-  display: block;
+app-markdown-viewer .plantuml-diagram img.plantuml-image-dark {
+  display: block !important;
 }
 
 app-markdown-viewer .plantuml-source pre {

@@ -151,8 +151,12 @@ a { color: inherit; text-decoration: none; }
     #fdfcff;
   background-size: 24px 24px;
 }
-:root[data-theme='light'] app-markdown-viewer .plantuml-image-light { display: block; }
-:root[data-theme='light'] app-markdown-viewer .plantuml-image-dark { display: none; }
+:root[data-theme='light'] app-markdown-viewer .plantuml-diagram img.plantuml-image-light {
+  display: block !important;
+}
+:root[data-theme='light'] app-markdown-viewer .plantuml-diagram img.plantuml-image-dark {
+  display: none !important;
+}
 
 :root[data-theme='light'] app-page-navigation button {
   color: #302938;

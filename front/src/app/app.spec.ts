@@ -251,5 +251,12 @@ Alice -> Bob: Hello
     ) as HTMLImageElement;
     expect(lightImage.src).not.toBe(darkImage.src);
     expect(darkImage.alt).toBe(lightImage.alt);
+    expect(getComputedStyle(lightImage).display).toBe('none');
+    expect(getComputedStyle(darkImage).display).toBe('block');
+
+    fixture.nativeElement.querySelector('.theme-button').click();
+    fixture.detectChanges();
+
+    expect(document.documentElement.dataset['theme']).toBe('light');
   });
 });
