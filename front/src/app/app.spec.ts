@@ -296,4 +296,88 @@ Alice -> Bob: Hello
     expect(fixture.nativeElement.querySelector('.diagram-lightbox')).toBeNull();
     expect(document.body.style.overflow).toBe('');
   });
+
+  it('should keep the diagram point under the cursor while wheel zooming', async () => {
+    const animationFrames: FrameRequestCallback[] = [];
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
+      animationFrames.push(callback);
+      return animationFrames.length;
+    });
+
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('.plantuml-image-dark')).toBeTruthy();
+    });
+
+    fixture.nativeElement.querySelector('.plantuml-image-dark').click();
+    fixture.detectChanges();
+
+    const viewport = fixture.nativeElement.querySelector(
+      '.diagram-lightbox-viewport'
+    ) as HTMLElement;
+    const lightboxImage = viewport.querySelector('img') as HTMLImageElement;
+    let zoomed = false;
+    vi.spyOn(lightboxImage, 'getBoundingClientRect').mockImplementation(
+      () =>
+        ({
+          left: zoomed ? -40 : 10,
+          top: zoomed ? -20 : 20,
+          width: zoomed ? 1150 : 1000,
+          height: zoomed ? 575 : 500
+        }) as DOMRect
+    );
+
+    viewport.scrollLeft = 120;
+    viewport.scrollTop = 80;
+    viewport.dispatchEvent(
+      new WheelEvent('wheel', {
+        bubbles: true,
+        cancelable: true,
+        clientX: 410,
+        clientY: 220,
+        deltaY: -100,
+        ctrlKey: true
+      })
+    );
+    fixture.detectChanges();
+
+    expect(lightboxImage.style.width).toBe('115%');
+    zoomed = true;
+    animationFrames.pop()?.(0);
+
+    expect(viewport.scrollLeft).toBe(130);
+    expect(viewport.scrollTop).toBe(70);
+  });
+
+  it('should leave unmodified wheel events available for diagram scrolling', async () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('.plantuml-image-dark')).toBeTruthy();
+    });
+
+    fixture.nativeElement.querySelector('.plantuml-image-dark').click();
+    fixture.detectChanges();
+
+    const viewport = fixture.nativeElement.querySelector(
+      '.diagram-lightbox-viewport'
+    ) as HTMLElement;
+    const wheelEvent = new WheelEvent('wheel', {
+      bubbles: true,
+      cancelable: true,
+      deltaY: 100
+    });
+    viewport.dispatchEvent(wheelEvent);
+    fixture.detectChanges();
+
+    expect(wheelEvent.defaultPrevented).toBe(false);
+    expect(
+      (viewport.querySelector('img') as HTMLImageElement).style.width
+    ).toBe('100%');
+  });
 });

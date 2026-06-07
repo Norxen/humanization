@@ -35,7 +35,10 @@
   >
     <div class="diagram-lightbox-panel" (click)="stopPropagation($event)">
       <div class="diagram-lightbox-toolbar">
-        <span>{{ image.alt }}</span>
+        <div class="diagram-lightbox-title">
+          <span>{{ image.alt }}</span>
+          <small>Ctrl/Shift + wheel to zoom</small>
+        </div>
         <div class="diagram-lightbox-actions">
           <button type="button" (click)="zoomOut()" aria-label="Zoom out">&#8722;</button>
           <button class="zoom-level" type="button" (click)="resetZoom()" aria-label="Reset zoom">
@@ -52,7 +55,7 @@
         <img
           [src]="image.src"
           [alt]="image.alt"
-          [style.width.%]="lightboxZoom() * 100"
+          [style.width.%]="lightboxZoomPercentage()"
         >
       </div>
     </div>
