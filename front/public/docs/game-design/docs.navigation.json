@@ -1,0 +1,113 @@
+[
+  { "page": "Index.md" },
+  {
+    "page": "Vision.md",
+    "folder": "Vision",
+    "children": [
+      { "page": "Game Pillars.md" },
+      { "page": "Player Fantasy and Experience Goals.md" },
+      { "page": "Scope and Non-Goals.md" }
+    ]
+  },
+  {
+    "page": "Production.md",
+    "folder": "Production",
+    "children": [
+      { "page": "Roadmap.md" },
+      { "page": "First 10 Floors Prototype.md" },
+      { "page": "Vertical Slice.md" }
+    ]
+  },
+  {
+    "page": "Systems.md",
+    "folder": "Systems",
+    "children": [
+      { "page": "Core Loop.md" },
+      {
+        "page": "Hub.md",
+        "folder": "Hub",
+        "children": [
+          { "page": "Hub Location Template.md" },
+          { "page": "Building Purpose and Era Levels.md" },
+          { "page": "Upgrade Requirements.md" },
+          { "page": "Location Interaction Rules.md" },
+          { "page": "NPC and Dialog Behavior.md" },
+          { "page": "Requests and Dungeon Objectives.md" },
+          { "page": "Hub Events and Consequences.md" },
+          { "page": "First Prototype Hub Scope.md" }
+        ]
+      },
+      {
+        "page": "Dungeon.md",
+        "folder": "Dungeon",
+        "children": [
+          { "page": "Run Structure.md" },
+          { "page": "Encounters.md" },
+          { "page": "Level Generation.md" },
+          { "page": "Extraction.md" }
+        ]
+      },
+      {
+        "page": "Progression.md",
+        "folder": "Progression",
+        "children": [
+          { "page": "Resources and Knowledge.md" },
+          { "page": "Era Progression.md" },
+          { "page": "Player Progression.md" },
+          { "page": "Inventory.md" }
+        ]
+      },
+      {
+        "page": "Combat.md",
+        "folder": "Combat",
+        "children": [
+          { "page": "Combat Model.md" },
+          { "page": "Player Actions.md" },
+          { "page": "Damage Rules.md" }
+        ]
+      }
+    ]
+  },
+  {
+    "page": "Content.md",
+    "folder": "Content",
+    "children": [
+      { "page": "Enemies.md" },
+      { "page": "Bosses.md" },
+      { "page": "Items and Equipment.md" },
+      { "page": "Locations and Biomes.md" },
+      { "page": "Survivors and NPCs.md" }
+    ]
+  },
+  {
+    "page": "Narrative.md",
+    "folder": "Narrative",
+    "children": [
+      { "page": "Story Brief.md" },
+      { "page": "World and History.md" },
+      { "page": "Characters and Factions.md" },
+      { "page": "Campaign Structure.md" },
+      { "page": "Narrative Delivery.md" }
+    ]
+  },
+  {
+    "page": "Presentation.md",
+    "folder": "Presentation",
+    "children": [
+      { "page": "Art Direction.md" },
+      { "page": "UI and UX.md" },
+      { "page": "Audio Direction.md" },
+      { "page": "Accessibility.md" }
+    ]
+  },
+  {
+    "page": "Reference.md",
+    "folder": "Reference",
+    "children": [
+      { "page": "Glossary.md" },
+      { "page": "Open Questions.md" },
+      { "page": "Decision Log.md" },
+      { "page": "Documentation Conventions.md" }
+    ]
+  }
+]

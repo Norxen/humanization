@@ -1,129 +1,287 @@
-import { readFile, readdir, writeFile } from 'node:fs/promises';
+import { readFile, readdir, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
-const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
-const projectDirectory = path.resolve(scriptDirectory, '..');
-const docsDirectory = path.resolve(projectDirectory, 'public', 'docs');
-const sourceDirectory = path.join(docsDirectory, 'game-design');
-const pageNodes = [];
+const allowedStatuses = new Set(['planned', 'draft', 'review', 'approved']);
 
-function displayName(fileName) {
-  const withoutExtension = fileName.replace(/\.md$/i, '');
-  const withoutPrefix = withoutExtension.replace(/^\d+(?:\.[a-z])?[_\s.-]*/i, '');
-
-  return withoutPrefix
-    .replaceAll(/[_-]+/g, ' ')
-    .replace(/\b\w/g, (character) => character.toUpperCase())
-    .trim();
+export function displayName(fileName) {
+  return fileName.replace(/\.md$/i, '').trim();
 }
 
-function displayPath(relativePath) {
-  return relativePath.split('/').map(displayName);
+export function parseFrontMatter(source, relativePath) {
+  if (!source.startsWith('---\n')) {
+    throw new Error(`${relativePath}: missing YAML front matter.`);
+  }
+
+  const end = source.indexOf('\n---\n', 4);
+  if (end === -1) {
+    throw new Error(`${relativePath}: front matter is not closed.`);
+  }
+
+  const metadata = {};
+  let activeList = null;
+  for (const rawLine of source.slice(4, end).split('\n')) {
+    const line = rawLine.trimEnd();
+    if (!line.trim()) {
+      continue;
+    }
+
+    const listItem = line.match(/^\s+-\s+(.+)$/);
+    if (listItem && activeList) {
+      metadata[activeList].push(unquote(listItem[1].trim()));
+      continue;
+    }
+
+    const property = line.match(/^([A-Za-z][A-Za-z0-9]*):(?:\s*(.*))?$/);
+    if (!property) {
+      throw new Error(`${relativePath}: invalid front matter line "${line}".`);
+    }
+
+    const [, key, rawValue = ''] = property;
+    if (key === 'related') {
+      metadata.related = rawValue ? parseInlineList(rawValue, relativePath) : [];
+      activeList = rawValue ? null : key;
+    } else {
+      metadata[key] = unquote(rawValue.trim());
+      activeList = null;
+    }
+  }
+
+  const required = ['status', 'lastReviewed', 'summary'];
+  for (const field of required) {
+    if (!metadata[field]) {
+      throw new Error(`${relativePath}: missing required front matter field "${field}".`);
+    }
+  }
+  if (!allowedStatuses.has(metadata.status)) {
+    throw new Error(`${relativePath}: invalid status "${metadata.status}".`);
+  }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(metadata.lastReviewed)) {
+    throw new Error(`${relativePath}: lastReviewed must use YYYY-MM-DD.`);
+  }
+  if (!Array.isArray(metadata.related)) {
+    metadata.related = [];
+  }
+
+  return {
+    metadata,
+    body: source.slice(end + 5)
+  };
 }
 
-async function scanDirectory(directory, relativeDirectory = '') {
-  const entries = await readdir(directory, { withFileTypes: true });
-  entries.sort((left, right) => {
-    if (left.name.toLowerCase() === 'index.md') return -1;
-    if (right.name.toLowerCase() === 'index.md') return 1;
+function parseInlineList(value, relativePath) {
+  if (!value.startsWith('[') || !value.endsWith(']')) {
+    throw new Error(`${relativePath}: related must be a YAML list.`);
+  }
+  const content = value.slice(1, -1).trim();
+  return content ? content.split(',').map((item) => unquote(item.trim())) : [];
+}
 
-    const nameComparison = displayName(left.name).localeCompare(
-      displayName(right.name),
-      undefined,
-      { numeric: true }
-    );
-    if (nameComparison !== 0) {
-      return nameComparison;
-    }
+function unquote(value) {
+  if (
+    (value.startsWith('"') && value.endsWith('"')) ||
+    (value.startsWith("'") && value.endsWith("'"))
+  ) {
+    return value.slice(1, -1);
+  }
+  return value;
+}
 
-    if (left.isDirectory() !== right.isDirectory()) {
-      return left.isDirectory() ? 1 : -1;
-    }
+function normalizePath(value) {
+  return value.replaceAll('\\', '/').replace(/^\.?\//, '');
+}
 
-    return left.name.localeCompare(right.name, undefined, { numeric: true });
-  });
+async function exists(target) {
+  try {
+    await stat(target);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
-  const nodes = [];
-
-  for (const entry of entries) {
-    const relativePath = path.posix.join(relativeDirectory, entry.name);
+async function markdownFiles(directory, relativeDirectory = '') {
+  const files = [];
+  for (const entry of await readdir(directory, { withFileTypes: true })) {
+    const relativePath = normalizePath(path.posix.join(relativeDirectory, entry.name));
     const absolutePath = path.join(directory, entry.name);
-
     if (entry.isDirectory()) {
-      const children = await scanDirectory(absolutePath, relativePath);
-      if (children.length === 0) {
-        continue;
+      files.push(...(await markdownFiles(absolutePath, relativePath)));
+    } else if (path.extname(entry.name).toLowerCase() === '.md') {
+      files.push(relativePath);
+    }
+  }
+  return files;
+}
+
+function resolveDocumentPath(fromPath, linkPath) {
+  const decoded = decodeURIComponent(linkPath);
+  return normalizePath(path.posix.normalize(path.posix.join(path.posix.dirname(fromPath), decoded)));
+}
+
+export async function buildManifest({ sourceDirectory, navigationPath }) {
+  const navigation = JSON.parse(await readFile(navigationPath, 'utf8'));
+  if (!Array.isArray(navigation)) {
+    throw new Error('docs.navigation.json must contain an array.');
+  }
+
+  const listedPages = new Set();
+  const pages = [];
+  const documents = new Map();
+
+  const loadDocument = async (relativePath) => {
+    const normalized = normalizePath(relativePath);
+    if (documents.has(normalized)) {
+      return documents.get(normalized);
+    }
+
+    const absolutePath = path.join(sourceDirectory, ...normalized.split('/'));
+    if (!(await exists(absolutePath))) {
+      throw new Error(`Navigation references missing page "${normalized}".`);
+    }
+
+    const source = await readFile(absolutePath, 'utf8');
+    const parsed = parseFrontMatter(source, normalized);
+    const headings = [...parsed.body.matchAll(/^#\s+(.+)$/gm)];
+    if (headings.length !== 1) {
+      throw new Error(`${normalized}: expected exactly one H1 heading.`);
+    }
+
+    const expectedTitle = displayName(path.basename(normalized));
+    const title = headings[0][1].trim();
+    if (title !== expectedTitle) {
+      throw new Error(`${normalized}: H1 must be "${expectedTitle}", received "${title}".`);
+    }
+
+    const document = { source, body: parsed.body, metadata: parsed.metadata, title };
+    documents.set(normalized, document);
+    return document;
+  };
+
+  const visitEntries = async (entries, parentDirectory = '', displayParents = []) => {
+    const nodes = [];
+    for (const entry of entries) {
+      if (!entry || typeof entry.page !== 'string') {
+        throw new Error('Every navigation entry must define a page.');
       }
 
-      nodes.push({
-        id: relativePath,
-        name: entry.name,
-        displayName: displayName(entry.name),
-        type: 'folder',
-        children
-      });
-      continue;
+      const pagePath = normalizePath(path.posix.join(parentDirectory, entry.page));
+      if (listedPages.has(pagePath)) {
+        throw new Error(`Duplicate navigation page "${pagePath}".`);
+      }
+      listedPages.add(pagePath);
+
+      const document = await loadDocument(pagePath);
+      const pageName = path.basename(pagePath);
+      const descriptor = {
+        id: pagePath,
+        name: pageName,
+        displayName: displayName(pageName),
+        displayPath: [...displayParents, displayName(pageName)],
+        title: document.title,
+        path: pagePath,
+        assetUrl: `docs/game-design/${pagePath}`,
+        status: document.metadata.status,
+        lastReviewed: document.metadata.lastReviewed,
+        summary: document.metadata.summary,
+        related: document.metadata.related.map((relatedPath) =>
+          resolveDocumentPath(pagePath, relatedPath)
+        )
+      };
+      descriptor.pageIndex = pages.length;
+      pages.push(descriptor);
+      nodes.push({ ...descriptor, type: 'markdown' });
+
+      if (entry.folder || entry.children) {
+        const folderName = entry.folder;
+        if (typeof folderName !== 'string' || !Array.isArray(entry.children)) {
+          throw new Error(`${pagePath}: folder entries require "folder" and "children".`);
+        }
+        if (displayName(pageName) !== displayName(folderName)) {
+          throw new Error(`${pagePath}: paired folder "${folderName}" must match the page name.`);
+        }
+
+        const folderPath = normalizePath(path.posix.join(parentDirectory, folderName));
+        const absoluteFolder = path.join(sourceDirectory, ...folderPath.split('/'));
+        if (!(await exists(absoluteFolder))) {
+          throw new Error(`Navigation references missing folder "${folderPath}".`);
+        }
+
+        const children = await visitEntries(
+          entry.children,
+          folderPath,
+          [...displayParents, displayName(folderName)]
+        );
+        nodes.push({
+          id: folderPath,
+          name: folderName,
+          displayName: displayName(folderName),
+          type: 'folder',
+          children
+        });
+      }
     }
+    return nodes;
+  };
 
-    if (path.extname(entry.name).toLowerCase() !== '.md') {
-      continue;
-    }
-
-    const markdown = await readFile(absolutePath, 'utf8');
-    const title =
-      markdown.match(/^#\s+(.+)$/m)?.[1]?.trim() ??
-      entry.name.replace(/\.md$/i, '').replaceAll(/[-_]/g, ' ');
-    const descriptor = {
-      id: relativePath,
-      name: entry.name,
-      displayName: displayName(entry.name),
-      displayPath: displayPath(relativePath),
-      title,
-      path: relativePath,
-      assetUrl: `docs/game-design/${relativePath}`
-    };
-
-    pageNodes.push(descriptor);
-    nodes.push({ ...descriptor, type: 'markdown' });
+  const nodes = await visitEntries(navigation);
+  const diskPages = await markdownFiles(sourceDirectory);
+  const stalePages = diskPages.filter((page) => !listedPages.has(page));
+  if (stalePages.length) {
+    throw new Error(`Markdown pages missing from navigation: ${stalePages.join(', ')}.`);
   }
 
-  return nodes;
-}
+  for (const page of pages) {
+    const document = documents.get(page.path);
+    for (const relatedPath of page.related) {
+      if (!listedPages.has(relatedPath)) {
+        throw new Error(`${page.path}: related page "${relatedPath}" does not exist.`);
+      }
+    }
 
-const nodes = await scanDirectory(sourceDirectory);
-const pages = pageNodes
-  .sort((left, right) => {
-    if (left.path.toLowerCase() === 'index.md') return -1;
-    if (right.path.toLowerCase() === 'index.md') return 1;
-    return left.path.localeCompare(right.path, undefined, { numeric: true });
-  })
-  .map((page, pageIndex) => ({ ...page, pageIndex }));
-
-const pageIndexes = new Map(pages.map((page) => [page.path, page.pageIndex]));
-
-function assignPageIndexes(items) {
-  for (const item of items) {
-    if (item.type === 'markdown') {
-      item.pageIndex = pageIndexes.get(item.path);
-    } else if (item.children) {
-      assignPageIndexes(item.children);
+    for (const match of document.body.matchAll(/\[[^\]]+\]\(([^)]+)\)/g)) {
+      const target = match[1].split('#', 1)[0];
+      if (!target || /^(?:[a-z]+:|\/|#)/i.test(target) || !target.toLowerCase().endsWith('.md')) {
+        continue;
+      }
+      const resolved = resolveDocumentPath(page.path, target);
+      if (!listedPages.has(resolved)) {
+        throw new Error(`${page.path}: broken Markdown link "${target}".`);
+      }
     }
   }
+
+  return {
+    name: 'game-design',
+    generatedAt: new Date().toISOString(),
+    nodes,
+    pages
+  };
 }
 
-assignPageIndexes(nodes);
-const manifest = {
-  name: 'game-design',
-  generatedAt: new Date().toISOString(),
-  nodes,
-  pages
-};
+export async function generateManifest(projectDirectory) {
+  const docsDirectory = path.join(projectDirectory, 'public', 'docs');
+  const sourceDirectory = path.join(docsDirectory, 'game-design');
+  const manifest = await buildManifest({
+    sourceDirectory,
+    navigationPath: path.join(sourceDirectory, 'docs.navigation.json')
+  });
+  await writeFile(
+    path.join(docsDirectory, 'manifest.json'),
+    `${JSON.stringify(manifest, null, 2)}\n`,
+    'utf8'
+  );
+  return manifest;
+}
 
-await writeFile(
-  path.join(docsDirectory, 'manifest.json'),
-  `${JSON.stringify(manifest, null, 2)}\n`,
-  'utf8'
-);
-
-console.log(`Generated documentation manifest with ${pages.length} markdown files.`);
+const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
+const isDirectRun = import.meta.url === pathToFileURL(process.argv[1] ?? '').href;
+if (isDirectRun) {
+  try {
+    const manifest = await generateManifest(path.resolve(scriptDirectory, '..'));
+    console.log(`Generated documentation manifest with ${manifest.pages.length} markdown files.`);
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : error);
+    process.exitCode = 1;
+  }
+}

@@ -11,6 +11,27 @@
 </div>
 
 <article>
+  <section class="document-summary" aria-label="Document metadata">
+    <div class="document-summary-heading">
+      <span class="status-badge" [attr.data-status]="document().descriptor.status">
+        {{ document().descriptor.status }}
+      </span>
+      <span>Reviewed {{ document().descriptor.lastReviewed }}</span>
+    </div>
+    <p>{{ document().descriptor.summary }}</p>
+
+    @if (document().descriptor.related.length) {
+      <div class="related-documents">
+        <span>Related</span>
+        @for (path of document().descriptor.related; track path) {
+          <button type="button" (click)="selectRelatedDocument(path)">
+            {{ relatedDocumentName(path) }}
+          </button>
+        }
+      </div>
+    }
+  </section>
+
   <div
     class="markdown-body"
     [innerHTML]="document().html"

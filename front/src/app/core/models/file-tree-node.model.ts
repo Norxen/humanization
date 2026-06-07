@@ -1,3 +1,5 @@
+import type { DocumentStatus } from './document-page.model';
+
 export interface FileTreeNode {
   id: string;
   name: string;
@@ -8,5 +10,9 @@ export interface FileTreeNode {
   path?: string;
   assetUrl?: string;
   pageIndex?: number;
+  status?: DocumentStatus;
+  lastReviewed?: string;
+  summary?: string;
+  related?: string[];
   children?: FileTreeNode[];
 }

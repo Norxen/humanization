@@ -1,30 +1,41 @@
+---
+status: draft
+lastReviewed: 2026-06-07
+summary: Entry point and reading map for the complete game design knowledge base.
+related:
+  - Vision.md
+  - Production.md
+  - Systems.md
+  - Narrative.md
+---
 # Index
 
 ## Purpose
 
-This document is the entry point for the gameplay design. The original single long document has been split into smaller loop-focused files so each system is easier to read, edit, and prototype.
+This document is the entry point for the full game-design knowledge base. The documentation separates vision, production milestones, gameplay systems, content, narrative, presentation, and shared reference material so decisions can develop without losing their relationships.
 
 ## Core Design Statement
 
 The player prepares in a growing human hub, descends into The Cradle to gather resources, rescue survivors, and recover lost knowledge, then chooses whether to extract safely or risk going deeper. Everything successfully extracted is used to rebuild civilization, unlock new technologies, improve the hub, and prepare for more dangerous expeditions.
 
-## Document Map
+## Knowledge Base Map
 
-| File | Covers |
+| Section | Covers |
 | --- | --- |
-| [Core Loop](Design/Core%20Loop.md) | The complete player cycle and design pillars. |
-| [Hub Loop](Design/Hub%20Loop.md) | Hub preparation, buildings, survivors, and city needs. |
-| [Dungeon Loop](Design/Dungeon%20Loop.md) | Runs, rooms, Survey Mode, Expedition Mode, extraction, and failure. |
-| [Progression Loop](Design/Progression%20Loop.md) | Resources, knowledge, eras, player upgrades, and unlock logic. |
-| [First 10 Floors Prototype](Design/First%2010%20Floors%20Prototype.md) | Small playable vertical slice for the first implementation. |
-| [Story Brief](Story%20Brief.md) | Narrative premise, world, protagonist, campaign arc, and themes. |
+| [Vision](Vision.md) | Game pillars, player fantasy, experience goals, scope, and non-goals. |
+| [Production](Production.md) | Prototype, vertical slice, roadmap, and milestone proof points. |
+| [Systems](Systems.md) | Core loop, hub, dungeon, progression, and combat rules. |
+| [Content](Content.md) | Enemies, bosses, items, locations, survivors, and production templates. |
+| [Narrative](Narrative.md) | Premise, world, cast, campaign, and narrative delivery. |
+| [Presentation](Presentation.md) | Art, UI/UX, audio, and accessibility direction. |
+| [Reference](Reference.md) | Glossary, open questions, decisions, and authoring conventions. |
 
 ## Recommended Reading Order
 
-1. Start with the [Story Brief](Story%20Brief.md) for context.
-2. Read the [Core Loop](Design/Core%20Loop.md) for the player experience.
-3. Read the [First 10 Floors Prototype](Design/First%2010%20Floors%20Prototype.md) before implementing anything.
-4. Use the hub, dungeon, and progression loop documents as system references.
+1. Start with the [Vision](Vision.md) and [Story Brief](Narrative/Story%20Brief.md) for context.
+2. Read the [Core Loop](Systems/Core%20Loop.md) for the player experience.
+3. Read the [First 10 Floors Prototype](Production/First%2010%20Floors%20Prototype.md) before implementing anything.
+4. Use the section overviews to find detailed system, content, narrative, and presentation documents.
 
 ## Prototype Rule
 

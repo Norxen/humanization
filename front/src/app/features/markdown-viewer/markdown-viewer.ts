@@ -43,6 +43,14 @@ export class MarkdownViewer implements OnDestroy {
   readonly next = output<void>();
   readonly documentSelected = output<string>();
 
+  selectRelatedDocument(path: string): void {
+    this.documentSelected.emit(path);
+  }
+
+  relatedDocumentName(path: string): string {
+    return path.replace(/\.md$/i, '').replaceAll('/', ' / ');
+  }
+
   handleDocumentClick(event: MouseEvent): void {
     const target = event.target;
     if (!(target instanceof Element)) {

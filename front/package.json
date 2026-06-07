@@ -11,7 +11,8 @@
     "prewatch": "npm run docs:generate",
     "watch": "ng build --watch --configuration development",
     "pretest": "npm run docs:generate",
-    "test": "ng test"
+    "test:docs": "node --test scripts/generate-docs-manifest.test.mjs",
+    "test": "npm run test:docs && ng test"
   },
   "private": true,
   "packageManager": "npm@11.6.2",

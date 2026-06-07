@@ -60,7 +60,8 @@ export class DocumentationStore {
         throw new Error(`Document request failed with ${response.status}.`);
       }
 
-      const markdown = await response.text();
+      const source = await response.text();
+      const markdown = this.stripFrontMatter(source);
       const html = await this.renderer.render(markdown, descriptor);
       if (sequence !== this.loadSequence) {
         return;
@@ -105,5 +106,14 @@ export class DocumentationStore {
   private calculateReadingTime(markdown: string): string {
     const words = markdown.trim().split(/\s+/).filter(Boolean).length;
     return `${Math.max(1, Math.ceil(words / 220))} min read`;
+  }
+
+  private stripFrontMatter(markdown: string): string {
+    if (!markdown.startsWith('---\n')) {
+      return markdown;
+    }
+
+    const end = markdown.indexOf('\n---\n', 4);
+    return end === -1 ? markdown : markdown.slice(end + 5);
   }
 }

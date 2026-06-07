@@ -1,5 +1,7 @@
-import { FileTreeNode } from './file-tree-node.model';
+import type { FileTreeNode } from './file-tree-node.model';
 import { SafeHtml } from '@angular/platform-browser';
+
+export type DocumentStatus = 'planned' | 'draft' | 'review' | 'approved';
 
 export interface DocumentDescriptor {
   id: string;
@@ -10,6 +12,10 @@ export interface DocumentDescriptor {
   path: string;
   assetUrl: string;
   pageIndex: number;
+  status: DocumentStatus;
+  lastReviewed: string;
+  summary: string;
+  related: string[];
 }
 
 export interface DocumentationManifest {

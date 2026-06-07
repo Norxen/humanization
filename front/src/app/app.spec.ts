@@ -16,7 +16,11 @@ const manifest: DocumentationManifest = {
       type: 'markdown',
       path: 'index.md',
       assetUrl: 'docs/game-design/index.md',
-      pageIndex: 0
+      pageIndex: 0,
+      status: 'draft',
+      lastReviewed: '2026-06-07',
+      summary: 'Entry point for the game design.',
+      related: ['storytelling.md']
     },
     {
       id: 'storytelling.md',
@@ -27,7 +31,11 @@ const manifest: DocumentationManifest = {
       type: 'markdown',
       path: 'storytelling.md',
       assetUrl: 'docs/game-design/storytelling.md',
-      pageIndex: 1
+      pageIndex: 1,
+      status: 'review',
+      lastReviewed: '2026-06-06',
+      summary: 'Narrative foundation.',
+      related: ['index.md']
     }
   ],
   pages: [
@@ -39,7 +47,11 @@ const manifest: DocumentationManifest = {
       title: 'Game Design Index',
       path: 'index.md',
       assetUrl: 'docs/game-design/index.md',
-      pageIndex: 0
+      pageIndex: 0,
+      status: 'draft',
+      lastReviewed: '2026-06-07',
+      summary: 'Entry point for the game design.',
+      related: ['storytelling.md']
     },
     {
       id: 'storytelling.md',
@@ -49,7 +61,11 @@ const manifest: DocumentationManifest = {
       title: 'Story Brief',
       path: 'storytelling.md',
       assetUrl: 'docs/game-design/storytelling.md',
-      pageIndex: 1
+      pageIndex: 1,
+      status: 'review',
+      lastReviewed: '2026-06-06',
+      summary: 'Narrative foundation.',
+      related: ['index.md']
     }
   ]
 };
@@ -69,8 +85,24 @@ describe('App', () => {
         }
 
         const markdown = url.endsWith('storytelling.md')
-          ? '# Story Brief\n\nThe narrative foundation.'
-          : `# Game Design Index
+          ? `---
+status: review
+lastReviewed: 2026-06-06
+summary: Narrative foundation.
+related:
+  - index.md
+---
+# Story Brief
+
+The narrative foundation.`
+          : `---
+status: draft
+lastReviewed: 2026-06-07
+summary: Entry point for the game design.
+related:
+  - storytelling.md
+---
+# Game Design Index
 
 Read the [Story Brief](storytelling.md).
 
@@ -111,6 +143,15 @@ Alice -> Bob: Hello
 
     expect(fixture.nativeElement.querySelector('app-file-tree')).toBeTruthy();
     expect(fixture.nativeElement.querySelector('app-page-navigation')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('.status-badge')?.textContent).toContain(
+      'draft'
+    );
+    expect(fixture.nativeElement.querySelector('.document-summary')?.textContent).toContain(
+      'Entry point for the game design.'
+    );
+    expect(fixture.nativeElement.querySelector('.markdown-body')?.textContent).not.toContain(
+      'lastReviewed'
+    );
   });
 
   it('should load the next markdown document', async () => {
@@ -193,6 +234,31 @@ Alice -> Bob: Hello
         'Story Brief'
       );
     });
+  });
+
+  it('should open related documents from manifest metadata', async () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(
+        fixture.nativeElement.querySelector('.related-documents button')
+      ).toBeTruthy();
+    });
+
+    fixture.nativeElement.querySelector('.related-documents button').click();
+
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('h1')?.textContent).toContain(
+        'Story Brief'
+      );
+    });
+
+    expect(fixture.nativeElement.querySelector('.status-badge')?.textContent).toContain(
+      'review'
+    );
   });
 
   it('should toggle and persist the light theme', () => {
