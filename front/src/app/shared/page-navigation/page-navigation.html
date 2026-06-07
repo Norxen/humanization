@@ -1,0 +1,10 @@
+<nav aria-label="Document pagination">
+  <button type="button" [disabled]="!previousPage()" (click)="previous.emit()">
+    <span>← Previous</span>
+    <strong>{{ previousPage()?.title || 'No previous page' }}</strong>
+  </button>
+  <button class="next" type="button" [disabled]="!nextPage()" (click)="next.emit()">
+    <span>Next →</span>
+    <strong>{{ nextPage()?.title || 'End of documentation' }}</strong>
+  </button>
+</nav>

@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.angular/
+.env
+.env.*
+!.env.example
+runtime/
+backups/
+*.log
+docs/game-design/diagrams/*

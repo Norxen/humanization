@@ -1,0 +1,26 @@
+<div class="toolbar">
+  <div class="breadcrumbs">
+    @for (part of document().descriptor.displayPath; track $index; let last = $last) {
+      <span [class.current]="last">{{ part }}</span>
+      @if (!last) { <b>/</b> }
+    }
+  </div>
+  <div class="meta">
+    <span>{{ document().readingTime }}</span><i></i><span>Markdown</span>
+  </div>
+</div>
+
+<article>
+  <div
+    class="markdown-body"
+    [innerHTML]="document().html"
+    (click)="handleDocumentClick($event)"
+  ></div>
+
+  <app-page-navigation
+    [previousPage]="previousPage()"
+    [nextPage]="nextPage()"
+    (previous)="previous.emit()"
+    (next)="next.emit()"
+  />
+</article>

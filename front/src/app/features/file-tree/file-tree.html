@@ -1,0 +1,48 @@
+<div class="heading">
+  <span>Files</span>
+  <button type="button" aria-label="More file options">...</button>
+</div>
+
+<nav class="file-tree" aria-label="Markdown files">
+  <ng-container
+    [ngTemplateOutlet]="tree"
+    [ngTemplateOutletContext]="{ $implicit: nodes(), depth: 0 }"
+  />
+</nav>
+
+<div class="footer">
+  <div><span>Y</span> main</div>
+  <span>{{ fileCount() }} markdown files</span>
+</div>
+
+<ng-template #tree let-items let-depth="depth">
+  @for (node of items; track node.id) {
+    <button
+      class="tree-row"
+      type="button"
+      [class.active]="node.pageIndex === activePageIndex()"
+      [class.folder]="node.type === 'folder'"
+      [style.padding-left.px]="9 + depth * 20"
+      (click)="selectNode(node)"
+    >
+      @if (node.type === 'folder') {
+        <span class="chevron" [class.expanded]="isExpanded(node.id)">&gt;</span>
+        <span class="folder-icon"></span>
+      } @else if (node.type === 'markdown') {
+        <span class="file-icon">M</span>
+      } @else {
+        <span class="config-icon">&#123;&#125;</span>
+      }
+      <span class="name">{{ node.displayName }}</span>
+    </button>
+
+    @if (node.children && isExpanded(node.id)) {
+      <div class="branch" [style.margin-left.px]="20 + depth * 20">
+        <ng-container
+          [ngTemplateOutlet]="tree"
+          [ngTemplateOutletContext]="{ $implicit: node.children, depth: depth + 1 }"
+        />
+      </div>
+    }
+  }
+</ng-template>

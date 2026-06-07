@@ -1,0 +1,52 @@
+<app-top-navbar
+  [theme]="themeService.theme()"
+  (menuToggle)="sidebarOpen.set(!sidebarOpen())"
+  (themeToggle)="themeService.toggle()"
+/>
+
+<div class="workspace">
+  <aside class="sidebar" [class.open]="sidebarOpen()">
+    <app-file-tree
+      [nodes]="store.fileTree()"
+      [activePageIndex]="store.activePageIndex()"
+      [fileCount]="store.pages().length"
+      (pageSelected)="selectPage($event)"
+    />
+  </aside>
+
+  @if (sidebarOpen()) {
+    <button
+      class="sidebar-backdrop"
+      type="button"
+      aria-label="Close file tree"
+      (click)="sidebarOpen.set(false)"
+    ></button>
+  }
+
+  <main>
+    @if (store.error(); as error) {
+      <div class="state-message">
+        <strong>Unable to load documentation</strong>
+        <p>{{ error }}</p>
+        <button type="button" (click)="store.initialize()">Try again</button>
+      </div>
+    } @else if (store.activeDocument(); as document) {
+      <app-markdown-viewer
+        [document]="document"
+        [previousPage]="store.previousPage()"
+        [nextPage]="store.nextPage()"
+        (documentSelected)="store.selectPath($event)"
+        (previous)="store.previous()"
+        (next)="store.next()"
+      />
+      @if (store.loading()) {
+        <div class="loading-bar"></div>
+      }
+    } @else {
+      <div class="state-message loading">
+        <span class="spinner"></span>
+        <p>Loading documentation...</p>
+      </div>
+    }
+  </main>
+</div>
