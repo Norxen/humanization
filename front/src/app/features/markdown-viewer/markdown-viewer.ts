@@ -25,9 +25,17 @@ import { AppUrlService } from '../../core/services/app-url.service';
 })
 export class MarkdownViewer implements OnDestroy {
   private readonly appUrl = inject(AppUrlService);
+  private panState: {
+    viewport: HTMLElement;
+    startX: number;
+    startY: number;
+    startScrollLeft: number;
+    startScrollTop: number;
+  } | null = null;
   readonly lightboxImage = signal<{ src: string; alt: string } | null>(null);
   readonly lightboxZoom = signal(1);
   readonly lightboxZoomPercentage = computed(() => Math.round(this.lightboxZoom() * 100));
+  readonly isPanning = signal(false);
   readonly document = input.required<LoadedDocument>();
   readonly previousPage = input<DocumentDescriptor>();
   readonly nextPage = input<DocumentDescriptor>();
@@ -74,10 +82,12 @@ export class MarkdownViewer implements OnDestroy {
 
     this.lightboxImage.set(null);
     this.lightboxZoom.set(1);
+    this.stopPanning();
     document.body.style.overflow = '';
   }
 
   ngOnDestroy(): void {
+    this.stopPanning();
     document.body.style.overflow = '';
   }
 
@@ -132,6 +142,53 @@ export class MarkdownViewer implements OnDestroy {
     });
   }
 
+  startPanning(event: MouseEvent): void {
+    if (event.button !== 1) {
+      return;
+    }
+
+    const viewport = event.currentTarget;
+    if (!(viewport instanceof HTMLElement)) {
+      return;
+    }
+
+    event.preventDefault();
+    this.panState = {
+      viewport,
+      startX: event.clientX,
+      startY: event.clientY,
+      startScrollLeft: viewport.scrollLeft,
+      startScrollTop: viewport.scrollTop
+    };
+    this.isPanning.set(true);
+  }
+
+  @HostListener('document:mousemove', ['$event'])
+  continuePanning(event: MouseEvent): void {
+    if (!this.panState) {
+      return;
+    }
+
+    event.preventDefault();
+    this.panState.viewport.scrollLeft =
+      this.panState.startScrollLeft - (event.clientX - this.panState.startX);
+    this.panState.viewport.scrollTop =
+      this.panState.startScrollTop - (event.clientY - this.panState.startY);
+  }
+
+  @HostListener('document:mouseup', ['$event'])
+  finishPanning(event: MouseEvent): void {
+    if (event.button === 1) {
+      this.stopPanning();
+    }
+  }
+
+  preventMiddleClick(event: MouseEvent): void {
+    if (event.button === 1) {
+      event.preventDefault();
+    }
+  }
+
   stopPropagation(event: Event): void {
     event.stopPropagation();
   }
@@ -151,6 +208,11 @@ export class MarkdownViewer implements OnDestroy {
 
   private clampZoom(zoom: number): number {
     return Math.min(3, Math.max(0.5, Number(zoom.toFixed(2))));
+  }
+
+  private stopPanning(): void {
+    this.panState = null;
+    this.isPanning.set(false);
   }
 
   private togglePlantUmlView(button: HTMLButtonElement): void {

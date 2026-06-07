@@ -346,11 +346,17 @@ app-markdown-viewer .diagram-lightbox-viewport {
   flex: 1;
   overflow: auto;
   padding: 28px;
+  cursor: grab;
+  user-select: none;
   background:
     linear-gradient(rgba(192, 132, 252, .035) 1px, transparent 1px),
     linear-gradient(90deg, rgba(192, 132, 252, .035) 1px, transparent 1px),
     #0f0c14;
   background-size: 24px 24px;
+}
+
+app-markdown-viewer .diagram-lightbox-viewport.is-panning {
+  cursor: grabbing;
 }
 
 app-markdown-viewer .diagram-lightbox-viewport img {

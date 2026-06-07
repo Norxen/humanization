@@ -380,4 +380,61 @@ Alice -> Bob: Hello
       (viewport.querySelector('img') as HTMLImageElement).style.width
     ).toBe('100%');
   });
+
+  it('should pan the diagram by dragging with the middle mouse button', async () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('.plantuml-image-dark')).toBeTruthy();
+    });
+
+    fixture.nativeElement.querySelector('.plantuml-image-dark').click();
+    fixture.detectChanges();
+
+    const viewport = fixture.nativeElement.querySelector(
+      '.diagram-lightbox-viewport'
+    ) as HTMLElement;
+    viewport.scrollLeft = 300;
+    viewport.scrollTop = 240;
+
+    const startEvent = new MouseEvent('mousedown', {
+      bubbles: true,
+      cancelable: true,
+      button: 1,
+      clientX: 500,
+      clientY: 400
+    });
+    viewport.dispatchEvent(startEvent);
+    fixture.detectChanges();
+
+    expect(startEvent.defaultPrevented).toBe(true);
+    expect(viewport.classList.contains('is-panning')).toBe(true);
+
+    document.dispatchEvent(
+      new MouseEvent('mousemove', {
+        bubbles: true,
+        cancelable: true,
+        buttons: 4,
+        clientX: 450,
+        clientY: 360
+      })
+    );
+
+    expect(viewport.scrollLeft).toBe(350);
+    expect(viewport.scrollTop).toBe(280);
+
+    document.dispatchEvent(
+      new MouseEvent('mouseup', {
+        bubbles: true,
+        button: 1,
+        clientX: 450,
+        clientY: 360
+      })
+    );
+    fixture.detectChanges();
+
+    expect(viewport.classList.contains('is-panning')).toBe(false);
+  });
 });

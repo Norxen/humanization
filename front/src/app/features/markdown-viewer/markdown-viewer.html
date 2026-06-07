@@ -37,7 +37,7 @@
       <div class="diagram-lightbox-toolbar">
         <div class="diagram-lightbox-title">
           <span>{{ image.alt }}</span>
-          <small>Ctrl/Shift + wheel to zoom</small>
+          <small>Ctrl/Shift + wheel to zoom &middot; Middle-drag to pan</small>
         </div>
         <div class="diagram-lightbox-actions">
           <button type="button" (click)="zoomOut()" aria-label="Zoom out">&#8722;</button>
@@ -51,7 +51,13 @@
         </div>
       </div>
 
-      <div class="diagram-lightbox-viewport" (wheel)="handleZoomWheel($event)">
+      <div
+        class="diagram-lightbox-viewport"
+        [class.is-panning]="isPanning()"
+        (wheel)="handleZoomWheel($event)"
+        (mousedown)="startPanning($event)"
+        (auxclick)="preventMiddleClick($event)"
+      >
         <img
           [src]="image.src"
           [alt]="image.alt"
