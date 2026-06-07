@@ -27,6 +27,20 @@ async function scanDirectory(directory, relativeDirectory = '') {
   entries.sort((left, right) => {
     if (left.name.toLowerCase() === 'index.md') return -1;
     if (right.name.toLowerCase() === 'index.md') return 1;
+
+    const nameComparison = displayName(left.name).localeCompare(
+      displayName(right.name),
+      undefined,
+      { numeric: true }
+    );
+    if (nameComparison !== 0) {
+      return nameComparison;
+    }
+
+    if (left.isDirectory() !== right.isDirectory()) {
+      return left.isDirectory() ? 1 : -1;
+    }
+
     return left.name.localeCompare(right.name, undefined, { numeric: true });
   });
 
