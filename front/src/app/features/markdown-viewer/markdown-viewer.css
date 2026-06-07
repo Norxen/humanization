@@ -144,6 +144,102 @@ app-markdown-viewer .markdown-body pre code {
   padding: 0; border: 0; color: inherit; background: transparent; white-space: pre;
 }
 
+app-markdown-viewer .plantuml-block {
+  margin: 28px 0 38px;
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, .18);
+}
+
+app-markdown-viewer .plantuml-toolbar {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 8px 10px 8px 16px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-raised);
+}
+
+app-markdown-viewer .plantuml-label {
+  color: #9d92a7;
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+}
+
+app-markdown-viewer .plantuml-controls {
+  display: flex;
+  gap: 3px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--background);
+}
+
+app-markdown-viewer .plantuml-controls button {
+  min-width: 70px;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 5px;
+  color: var(--muted);
+  background: transparent;
+  font-size: 10px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: color .15s ease, background .15s ease, box-shadow .15s ease;
+}
+
+app-markdown-viewer .plantuml-controls button:hover {
+  color: var(--ink);
+}
+
+app-markdown-viewer .plantuml-controls button.active {
+  color: #f3e8ff;
+  background: var(--accent);
+  box-shadow: 0 4px 14px rgba(168, 85, 247, .25);
+}
+
+app-markdown-viewer .plantuml-panel {
+  min-height: 180px;
+}
+
+app-markdown-viewer .plantuml-panel.is-hidden {
+  display: none;
+}
+
+app-markdown-viewer .plantuml-diagram {
+  padding: 24px;
+  overflow: auto;
+  background:
+    linear-gradient(rgba(168, 85, 247, .025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(168, 85, 247, .025) 1px, transparent 1px),
+    #fdfcff;
+  background-size: 24px 24px;
+}
+
+app-markdown-viewer .plantuml-diagram img {
+  max-width: none;
+  min-width: min(100%, 680px);
+  margin: 0 auto;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+app-markdown-viewer .plantuml-source pre {
+  min-height: 180px;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
 app-markdown-viewer .markdown-body table {
   width: 100%;
   margin: 24px 0 32px;
@@ -191,4 +287,12 @@ app-markdown-viewer .markdown-body hr {
   app-markdown-viewer article { width: calc(100% - 36px); padding-top: 52px; }
   app-markdown-viewer .markdown-body > h1:first-child { font-size: 2.65rem; }
   app-markdown-viewer .markdown-body table { display: block; overflow-x: auto; }
+  app-markdown-viewer .plantuml-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 12px;
+  }
+  app-markdown-viewer .plantuml-controls { width: 100%; }
+  app-markdown-viewer .plantuml-controls button { flex: 1; }
+  app-markdown-viewer .plantuml-diagram { padding: 14px; }
 }

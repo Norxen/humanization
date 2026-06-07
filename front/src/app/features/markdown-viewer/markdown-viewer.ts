@@ -29,6 +29,14 @@ export class MarkdownViewer {
       return;
     }
 
+    const viewButton = target.closest<HTMLButtonElement>(
+      '.plantuml-show-diagram, .plantuml-show-source'
+    );
+    if (viewButton) {
+      this.togglePlantUmlView(viewButton);
+      return;
+    }
+
     const link = target.closest<HTMLAnchorElement>('a[href]');
     const href = link?.getAttribute('href');
     const documentPath = href
@@ -38,5 +46,24 @@ export class MarkdownViewer {
       event.preventDefault();
       this.documentSelected.emit(documentPath);
     }
+  }
+
+  private togglePlantUmlView(button: HTMLButtonElement): void {
+    const figure = button.closest('.plantuml-block');
+    const diagram = figure?.querySelector('.plantuml-diagram');
+    const source = figure?.querySelector('.plantuml-source');
+    const diagramButton = figure?.querySelector<HTMLButtonElement>('.plantuml-show-diagram');
+    const sourceButton = figure?.querySelector<HTMLButtonElement>('.plantuml-show-source');
+    if (!diagram || !source || !diagramButton || !sourceButton) {
+      return;
+    }
+
+    const showSource = button.classList.contains('plantuml-show-source');
+    diagram.classList.toggle('is-hidden', showSource);
+    source.classList.toggle('is-hidden', !showSource);
+    diagramButton.classList.toggle('active', !showSource);
+    sourceButton.classList.toggle('active', showSource);
+    diagramButton.setAttribute('aria-pressed', String(!showSource));
+    sourceButton.setAttribute('aria-pressed', String(showSource));
   }
 }

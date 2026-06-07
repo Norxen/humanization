@@ -70,7 +70,15 @@ describe('App', () => {
 
         const markdown = url.endsWith('storytelling.md')
           ? '# Story Brief\n\nThe narrative foundation.'
-          : '# Game Design Index\n\nRead the [Story Brief](storytelling.md).';
+          : `# Game Design Index
+
+Read the [Story Brief](storytelling.md).
+
+\`\`\`plantuml
+@startuml
+Alice -> Bob: Hello
+@enduml
+\`\`\``;
         return new Response(markdown, { status: 200 });
       })
     );
@@ -157,5 +165,27 @@ describe('App', () => {
     expect(document.documentElement.dataset['theme']).toBe('light');
     expect(localStorage.getItem('manuscript-theme')).toBe('light');
     expect(themeButton.getAttribute('aria-label')).toBe('Switch to dark mode');
+  });
+
+  it('should switch PlantUML blocks between diagram and source views', async () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('.plantuml-block')).toBeTruthy();
+    });
+
+    const sourceButton = fixture.nativeElement.querySelector(
+      '.plantuml-show-source'
+    ) as HTMLButtonElement;
+    sourceButton.click();
+
+    const sourcePanel = fixture.nativeElement.querySelector('.plantuml-source');
+    const diagramPanel = fixture.nativeElement.querySelector('.plantuml-diagram');
+    expect(sourcePanel.classList.contains('is-hidden')).toBe(false);
+    expect(diagramPanel.classList.contains('is-hidden')).toBe(true);
+    expect(sourcePanel.textContent).toContain('Alice -> Bob: Hello');
+    expect(sourceButton.getAttribute('aria-pressed')).toBe('true');
   });
 });

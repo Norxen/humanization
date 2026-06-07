@@ -1,4 +1,5 @@
 import { FileTreeNode } from './file-tree-node.model';
+import { SafeHtml } from '@angular/platform-browser';
 
 export interface DocumentDescriptor {
   id: string;
@@ -23,5 +24,5 @@ export interface LoadedDocument {
   title: string;
   readingTime: string;
   markdown: string;
-  html: string;
+  html: SafeHtml;
 }
