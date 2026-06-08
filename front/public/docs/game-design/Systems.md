@@ -1,10 +1,10 @@
 ---
 status: draft
-lastReviewed: 2026-06-07
+lastReviewed: 2026-06-09
 summary: Map of the interacting gameplay systems that produce expeditions, settlement growth, and campaign progress.
 related:
   - Systems/Core Loop.md
-  - Production/First 10 Floors Prototype.md
+  - Production/MVP Scope.md
 ---
 # Systems
 

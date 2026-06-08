@@ -1,11 +1,11 @@
 ---
 status: review
-lastReviewed: 2026-06-07
+lastReviewed: 2026-06-09
 summary: Settlement planning, locations, survivors, requests, upgrades, and the visible rebuilding of civilization.
 related:
   - Core Loop.md
   - Dungeon.md
-  - Hub/First Prototype Hub Scope.md
+  - Hub/Building Purpose and Era Levels.md
 ---
 # Hub
 
@@ -31,7 +31,7 @@ Every hub location should follow the same general structure, even if each one ha
 
 A location can show the player its current state, present one or more characters, offer local actions, expose upgrades, and generate needs. This keeps the hub scalable: a clinic, farm, workbench, generator room, archive terminal, and radio tower can all use the same interaction logic while still feeling different.
 
-Each location should also have an era identity. The building's core purpose remains stable, but its form and output improve as civilization advances. A food building may begin as a foraging station, become a farm, later become an automated greenhouse, and eventually become a future biotech food system. This gives the hub a clear long-term progression path without changing the player's basic understanding of what the building is for.
+Each location should also have an era identity. The building's core purpose remains stable, but its form and output improve as civilization advances. A food building may begin as a foraging station, become a farm, gain mechanical processing, use powered greenhouse systems, and eventually coordinate production through settlement networks. This gives the hub a clear long-term progression path without changing the player's basic understanding of what the building is for.
 
 The generic model is:
 
@@ -54,13 +54,12 @@ The hub loop has several child documents. Each one defines a specific part of ho
 | File | Covers |
 | --- | --- |
 | [Hub Location Template](Hub/Hub%20Location%20Template.md) | Shared schema for every hub building or location. |
-| [Building Purpose and Era Levels](Hub/Building%20Purpose%20and%20Era%20Levels.md) | How each building evolves from early survival forms to future forms. |
+| [Building Purpose and Era Levels](Hub/Building%20Purpose%20and%20Era%20Levels.md) | How each building evolves across the six first-campaign eras. |
 | [Upgrade Requirements](Hub/Upgrade%20Requirements.md) | Resources, knowledge, survivors, milestones, and dependencies needed for upgrades. |
 | [Location Interaction Rules](Hub/Location%20Interaction%20Rules.md) | How status, functions, dialog, upgrades, assignments, and events appear in a location. |
 | [NPC and Dialog Behavior](Hub/NPC%20and%20Dialog%20Behavior.md) | Contextual dialog rules for survivors and story NPCs. |
 | [Requests and Dungeon Objectives](Hub/Requests%20and%20Dungeon%20Objectives.md) | How hub needs become dungeon objectives and resolve back into hub progress. |
 | [Hub Events and Consequences](Hub/Hub%20Events%20and%20Consequences.md) | Small settlement events caused by needs, failures, milestones, or NPC conflicts. |
-| [First Prototype Hub Scope](Hub/First%20Prototype%20Hub%20Scope.md) | The minimal hub needed to test the first playable loop. |
 
 ## Location Interaction Types
 
@@ -119,7 +118,7 @@ Return from dungeon
 
 The diagram below shows the hub as a generic interaction network. It does not assume a specific building. Any location can plug into the same workflow.
 
-Each building also has an **era level**. A clinic, farm, forge, archive terminal, or generator room should keep the same broad purpose across the whole game, but its function improves as civilization advances. For example, a healing location may begin as a campfire triage spot, become a clinic during the Settlement Era, become a powered medical station in the Electricity Era, and eventually become an advanced regeneration or bioengineering facility in a future era.
+Each building also has an **era level**. A clinic, farm, forge, archive terminal, or generator room should keep the same broad purpose across the whole game, but its function improves as civilization advances. For example, a healing location may begin as a campfire triage spot, become a staffed clinic, gain machine-assisted treatment, become powered in the Electricity Era, and coordinate diagnosis through Connectivity.
 
 This means every building has three important questions:
 
@@ -169,14 +168,12 @@ partition "3. Building Identity and Era State" {
   :Check current era level;
   note right
   Example era levels:
-  - Survival / Stone Age
+  - Survival
   - Settlement
   - Metalworking
   - Mechanization
   - Electricity
   - Connectivity
-  - Modern
-  - Future
   end note
 
   :Show current building status;
@@ -276,7 +273,7 @@ City needs are the hub's pressure system. They make the settlement feel alive an
 
 Food, health, knowledge, power, morale, and security can all create objectives. If the clinic lacks medicine, the player has a reason to search organic rooms. If the forge lacks copper, the player has a reason to enter metal-rich floors. If the archive has an unreadable memory core, the player may need a specialist or a better research station.
 
-For the first prototype, the hub should use only a small set of needs:
+The earliest playable settlement should begin with a readable set of needs before additional simulation layers are introduced:
 
 | Need | Why It Matters |
 | --- | --- |
@@ -286,7 +283,7 @@ For the first prototype, the hub should use only a small set of needs:
 | Knowledge | Unlocks technologies and story. |
 | Power | Drives the first major settlement milestone. |
 
-More needs can be added later, but the first version should stay readable.
+More needs can be added as their interactions and production cost are understood, but the initial set should stay readable.
 
 ## Hub Growth
 
@@ -306,17 +303,17 @@ Growth should not only add new menus. It should change what the player sees, who
 
 Buildings should not be replaced by unrelated systems every era. They should evolve.
 
-| Building Purpose | Early Form | Industrial / Modern Form | Future Form |
+| Building Purpose | Survival / Settlement | Metalworking / Mechanization | Electricity / Connectivity |
 | --- | --- | --- | --- |
-| Healing | Triage corner, herbal table, basic clinic. | Powered clinic, surgical station, diagnostic equipment. | Regeneration lab, bio-monitoring system, advanced medicine. |
-| Food | Foraging storage, seed bed, basic farm. | Irrigated farm, greenhouse, food processing. | Automated hydroponics, bioengineered crops, nutrient synthesis. |
-| Crafting | Workbench, hand tools, repair table. | Machine workshop, powered tools, fabrication line. | Nanofabricator, adaptive manufacturing, smart materials. |
-| Materials | Stone store, scrap sorting, charcoal furnace. | Forge, refinery, material processor. | Molecular assembler, advanced alloy printer. |
-| Knowledge | Damaged terminal, manual archive, teacher space. | Research lab, school, data recovery station. | Predictive archive, AI-assisted research, memory reconstruction. |
-| Power | Campfire, hand crank, damaged generator. | Power grid, battery bank, turbine, reactor. | Fusion core, wireless power, exotic energy system. |
-| Communication | Signal flags, basic radio, antenna. | Radio tower, scanner array, archive network. | Quantum relay, temporal signal system, inter-settlement network. |
+| Healing | Triage corner, herbal table, staffed clinic. | Durable instruments, sterile surfaces, pump-assisted treatment. | Powered care, sensors, and networked diagnostics. |
+| Food | Foraging storage, seed bed, basic farm. | Durable tools, irrigation machinery, food processing. | Powered greenhouse systems and coordinated production data. |
+| Crafting | Workbench, hand tools, repair table. | Forge, machine workshop, precision and repeatable parts. | Powered tools, sensors, and networked fabrication planning. |
+| Materials | Stone storage, scrap sorting, charcoal furnace. | Refining, alloys, machine-assisted processing. | Powered processing and coordinated material logistics. |
+| Knowledge | Damaged terminal, manual archive, teaching space. | Durable records, instruments, mechanical data recovery. | Powered archives, shared analysis, and networked research. |
+| Power | Fire, hand crank, repaired mechanical generation. | Pumps, turbines, transmission machinery. | Stable grid, storage, sensing, and coordinated distribution. |
+| Communication | Signals, local records, simple transmitters. | Precision instruments and mechanical signal systems. | Radio, scanner arrays, and inter-settlement networks. |
 
-This approach keeps the hub readable. The player can understand that "the clinic heals people" from the beginning, while still feeling that the clinic changes meaningfully as civilization climbs from primitive survival to advanced technology.
+This approach keeps the hub readable. The player can understand that "the clinic heals people" from the beginning while still feeling it change meaningfully from manual survival to networked civilization.
 
 ## Design Rules
 

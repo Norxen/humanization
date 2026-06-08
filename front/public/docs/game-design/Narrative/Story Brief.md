@@ -1,6 +1,6 @@
 ---
 status: draft
-lastReviewed: 2026-06-07
+lastReviewed: 2026-06-09
 summary: Narrative premise, world, protagonist, first campaign arc, and central themes.
 related:
   - ../Vision.md
@@ -19,7 +19,7 @@ Gameplay rules live in the loop documents:
 - [Hub](../Systems/Hub.md)
 - [Dungeon](../Systems/Dungeon.md)
 - [Progression](../Systems/Progression.md)
-- [First 10 Floors Prototype](../Production/First%2010%20Floors%20Prototype.md)
+- [Production](../Production.md)
 
 ## High Concept
 

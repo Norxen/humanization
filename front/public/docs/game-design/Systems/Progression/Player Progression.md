@@ -1,6 +1,6 @@
 ---
 status: planned
-lastReviewed: 2026-06-07
+lastReviewed: 2026-06-09
 summary: Planned permanent and run-specific growth for the engineer protagonist.
 related:
   - ../Progression.md
@@ -19,6 +19,8 @@ Progression should reinforce engineering, preparation, and adaptability. It shou
 - Run-specific upgrades and temporary conditions.
 - Respecialization rules.
 - Relationship between equipment quality and player mastery.
+- How universal combat verbs transform through era-supported tools and equipment.
+- Boundaries between permanent player knowledge and settlement-supported capability.
 - Catch-up and failure recovery.
 
 ## Completion Criteria

@@ -1,6 +1,6 @@
 ---
 status: planned
-lastReviewed: 2026-06-07
+lastReviewed: 2026-06-09
 summary: Planned accessibility requirements covering input, vision, hearing, cognition, motion, and difficulty support.
 related:
   - UI and UX.md
@@ -12,6 +12,7 @@ related:
 ## Required Areas
 
 - Complete remapping and controller support.
+- Adjustable free-aim assistance that preserves independent targeting as the default model.
 - Text size, contrast, color-independent meaning, and readable diagrams.
 - Subtitles, captions, directional sound alternatives, and volume categories.
 - Motion, flashing, camera shake, and timing adjustments.

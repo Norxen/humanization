@@ -1,6 +1,6 @@
 ---
 status: planned
-lastReviewed: 2026-06-07
+lastReviewed: 2026-06-09
 summary: Planned survivor roles, identities, recruitment, assignment, states, relationships, and content template.
 related:
   - ../Systems/Hub/NPC and Dialog Behavior.md
@@ -22,4 +22,4 @@ Every survivor should have a name, role, fear, conflict, and reason to matter. A
 
 ## Completion Criteria
 
-Define the survivor schema, role taxonomy, prototype cast, state model, and writing requirements.
+Define the survivor schema, role taxonomy, representative cast requirements, state model, and writing requirements.

@@ -1,30 +1,32 @@
 ---
 status: planned
-lastReviewed: 2026-06-07
-summary: Evidence-based milestone sequence from core-loop prototype to complete first campaign.
+lastReviewed: 2026-06-09
+summary: Production sequence that begins with complete-game definition and dependency analysis before MVP reduction.
 related:
   - ../Production.md
-  - First 10 Floors Prototype.md
+  - MVP Scope.md
   - Vertical Slice.md
 ---
 # Roadmap
 
-## Proposed Milestones
+## Definition Sequence
 
-| Milestone | Must Prove |
+| Stage | Required Outcome |
 | --- | --- |
-| First 10 Floors Prototype | The hub need, expedition, extraction, and upgrade cycle is understandable and worth repeating. |
-| Vertical Slice | Representative quality, combat, content variety, narrative delivery, and production pipeline can coexist. |
-| Era Complete | One civilization era supports enough content and progression for sustained play. |
-| First Campaign | The complete era arc reaches Connectivity and resolves the first signal ending. |
+| Complete Game Model | Core systems, content families, campaign structure, presentation targets, and their intended interactions are defined. |
+| Complexity Map | Dependencies, production risks, reusable pipelines, expensive content, and unresolved technical requirements are visible. |
+| MVP Reduction | The smallest coherent product is selected from the understood model and recorded in MVP Scope. |
+| Vertical Slice | Representative quality, combat, content variety, narrative delivery, accessibility, and production pipeline coexist. |
+| Campaign Planning | Era and campaign milestones receive measurable scope, dependencies, and exit criteria. |
 
 ## Open Questions
 
 - Target session and campaign length.
 - Team size and production constraints.
 - Supported platforms and control methods.
-- Content volume required per era.
+- Content volume and reuse required per era.
+- Which complete-game dependencies are mandatory for a coherent MVP.
 
 ## Completion Criteria
 
-Add measurable exit criteria, dependencies, risks, and review dates for every milestone before production scheduling begins.
+Add measurable outcomes, dependencies, risks, and review dates before scheduling any implementation milestone.

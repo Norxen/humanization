@@ -1,6 +1,6 @@
 ---
 status: planned
-lastReviewed: 2026-06-07
+lastReviewed: 2026-06-09
 summary: Planned spatial themes, era bands, landmarks, hazards, resources, and visual identities.
 related:
   - ../Systems/Dungeon/Level Generation.md
@@ -18,7 +18,7 @@ Cradle zones preserve or simulate stages of civilization. Each location family s
 - Era overlap and transition zones.
 - Landmark, hazard, resource, and enemy compatibility.
 - Reuse limits and variation requirements.
-- Prototype and vertical-slice location sets.
+- Representative and vertical-slice location sets.
 
 ## Completion Criteria
 

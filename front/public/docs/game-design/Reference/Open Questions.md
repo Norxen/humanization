@@ -1,6 +1,6 @@
 ---
 status: draft
-lastReviewed: 2026-06-07
+lastReviewed: 2026-06-09
 summary: Central register for unresolved choices that materially affect multiple documents or milestones.
 related:
   - Decision Log.md
@@ -10,11 +10,14 @@ related:
 
 | ID | Question | Affects | Needed By | Status |
 | --- | --- | --- | --- | --- |
-| OQ-001 | What combat timing and camera model best supports engineering and preparation? | Combat, encounters, UI, content | Prototype definition | Open |
-| OQ-002 | What is the target run duration for Survey and Expedition modes? | Dungeon, extraction, production | Prototype tuning | Open |
+| OQ-002 | What is the target run duration for Survey and Expedition modes? | Dungeon, extraction, production | Run structure definition | Open |
 | OQ-003 | Which platforms and primary control methods are targeted? | UI, accessibility, combat, performance | Vertical slice planning | Open |
 | OQ-004 | What are the canonical rules of the Return Protocol? | Narrative, campaign, ending | Campaign outline | Open |
 | OQ-005 | How much survivor behavior is authored versus systemic? | Hub, narrative, content budget | Vertical slice | Open |
+| OQ-006 | Which primary-weapon, sidearm, and gadget archetypes express each era without invalidating earlier equipment? | Combat, items, progression, content | Equipment taxonomy | Open |
+| OQ-007 | What damage, evade, healing, and vulnerability timings produce the intended deliberate combat pace? | Combat, enemies, accessibility | Representative combat tuning | Open |
+| OQ-008 | Which enemy roles and group compositions best test free aim, positioning, scanning, and engineering control? | Enemies, encounters, combat | Encounter model | Open |
+| OQ-009 | Which complete-game dependencies are mandatory for a coherent MVP after complexity mapping? | Production, all systems | MVP definition | Open |
 
 ## Usage
 

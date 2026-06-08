@@ -1,19 +1,21 @@
 ---
 status: draft
-lastReviewed: 2026-06-07
-summary: Milestones and proof points used to turn the full-game vision into testable releases.
+lastReviewed: 2026-06-09
+summary: Process for understanding the complete game before reducing it into production milestones and an MVP.
 related:
   - Production/Roadmap.md
-  - Production/First 10 Floors Prototype.md
+  - Production/MVP Scope.md
 ---
 # Production
 
 ## Purpose
 
-Production documentation defines what each milestone must prove. It does not replace system design; it selects the smallest coherent set of systems and content required for a reliable evaluation.
+Production documentation converts an understood game design into executable milestones. It does not define the game by prematurely selecting a small feature list.
 
-## Milestone Order
+## Definition Order
 
-1. [First 10 Floors Prototype](Production/First%2010%20Floors%20Prototype.md)
-2. [Vertical Slice](Production/Vertical%20Slice.md)
-3. Later campaign milestones listed in the [Roadmap](Production/Roadmap.md)
+1. Define the complete game model and intended player experience.
+2. Map system, content, presentation, and technical dependencies.
+3. Estimate the complexity and risks of those dependencies.
+4. Reduce the understood model into the reserved [MVP Scope](Production/MVP%20Scope.md).
+5. Define later quality and campaign milestones in the [Roadmap](Production/Roadmap.md).

@@ -1,12 +1,12 @@
 ---
 status: review
-lastReviewed: 2026-06-07
+lastReviewed: 2026-06-09
 summary: Authoritative player cycle connecting hub needs, dungeon risk, extraction, and permanent progress.
 related:
   - Hub.md
   - Dungeon.md
   - Progression.md
-  - ../Production/First 10 Floors Prototype.md
+  - ../Production/MVP Scope.md
 ---
 # Core Loop
 

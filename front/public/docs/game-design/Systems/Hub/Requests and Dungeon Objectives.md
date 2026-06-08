@@ -1,6 +1,6 @@
 ---
-status: review
-lastReviewed: 2026-06-07
+status: draft
+lastReviewed: 2026-06-09
 summary: Rules that convert settlement needs into generated dungeon objectives and resolve their outcomes.
 related:
   - ../Hub.md
@@ -139,12 +139,12 @@ Tracked requests should influence generation with clear strength:
 
 | Strength | Rule |
 | --- | --- |
-| Guaranteed | Main tracked request target appears somewhere on the level if the player chose that objective. |
+| Guaranteed | Main tracked request target appears when the objective and run structure explicitly promise access. |
 | Favored | Compatible resources and side targets have increased chance. |
 | Incidental | Untracked requests may appear only if the generated level already fits them. |
 | Blocked | The request cannot appear because the required era band, milestone, or level tag is unavailable. |
 
-For the prototype, use guaranteed placement for the tracked objective. Later versions can add uncertainty, scouting, and partial information.
+Placement certainty must be defined by objective type, available information, and run structure. Generation must not promise guaranteed access unless the player-facing objective makes that guarantee clear.
 
 ### Objective Anchor
 
@@ -177,6 +177,6 @@ This result feeds directly into the hub's daily, weekly, and era request states.
 
 ## Multiple Requests
 
-The player can have several available requests, but a prototype should only track one primary dungeon objective at a time. Secondary objectives can appear as optional opportunities if they belong to the same floor range.
+The number of tracked and secondary requests remains unresolved. The expedition interface must make the primary purpose of a run clear even when several compatible opportunities exist.
 
 For example, a clinic fungus request and workbench copper request can both target early floors, but the expedition board should ask the player to choose the main run goal. The chosen goal influences dungeon placement so the run feels intentional.

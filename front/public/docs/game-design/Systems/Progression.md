@@ -1,6 +1,6 @@
 ---
 status: draft
-lastReviewed: 2026-06-07
+lastReviewed: 2026-06-09
 summary: Permanent advancement through resources, knowledge, eras, equipment, and settlement capability.
 related:
   - Core Loop.md
@@ -80,55 +80,37 @@ Resources + Knowledge + Milestone Objective
 
 The player should not advance eras only by reaching a floor number. The hub must also be ready.
 
-## Example Era Unlocks
+The first-campaign sequence is:
 
-### Settlement Era
+```text
+Survival
+-> Settlement
+-> Metalworking
+-> Mechanization
+-> Electricity
+-> Connectivity
+```
 
-Requirements:
+Exact transition requirements remain unresolved until campaign, hub, dungeon, and content dependencies are defined together.
 
-- Rescue 3 survivors.
-- Build water collector.
-- Build basic shelter.
-- Recover Agriculture Fragment I.
-- Defeat the Floor 50 boss.
+## Capability-Gated Salvage
 
-### Metalworking Era
+Advanced technology can be discovered before the settlement reaches the era needed to support it.
 
-Requirements:
+Recovery and ownership do not automatically grant full use. The current civilization capability determines whether an item can be:
 
-- Build mine access.
-- Recover furnace blueprint.
-- Rescue blacksmith or metallurgist.
-- Gather copper, tin, or iron.
-- Defeat the Floor 100 boss.
+- Understood.
+- Safely powered.
+- Repaired.
+- Supplied with ammunition, fuel, or replacement parts.
+- Reproduced.
+- Modified and upgraded.
 
-### Electricity Era
-
-Requirements:
-
-- Build mechanical workshop.
-- Recover generator blueprint.
-- Gather copper, magnets, and fuel cells.
-- Rescue technician or electrician.
-- Defeat the Electricity Gatekeeper.
+An advanced relic may function briefly in an unreliable state, remain locked for research, or provide knowledge and components before it becomes a sustainable combat option. This preserves discovery without allowing random loot to bypass civilization progression.
 
 ## Engineer Progression
 
 The protagonist should feel like an engineer, not a generic fighter.
-
-Engineer tools:
-
-- Scanner.
-- Repair tool.
-- Deployable turret.
-- Portable barricade.
-- Shock trap.
-- Drone.
-- Resource extractor.
-- Portable light.
-- Signal beacon.
-- Door hacking tool.
-- Power rerouter.
 
 Engineer combat style:
 
@@ -139,17 +121,7 @@ Engineer combat style:
 - Improvised weapons.
 - Environmental control.
 
-Example abilities:
-
-| Ability | Function |
-| --- | --- |
-| Scanner Pulse | Reveals hidden resources, traps, and enemy weaknesses. |
-| Deploy Turret | Places a temporary defensive tool. |
-| Shock Trap | Stuns enemies in an area. |
-| Emergency Patch | Repairs armor or gadgets mid-run. |
-| Barricade Kit | Blocks enemy paths. |
-| Power Surge | Overloads nearby machines or enemies. |
-| Extraction Beacon | Improves extraction options if upgraded. |
+The universal combat actions and loadout live in [Player Actions](Combat/Player%20Actions.md). Era progression transforms what those actions can affect rather than replacing them with disconnected ability sets.
 
 The fantasy:
 

@@ -57,6 +57,34 @@ test('uses configured order and pairs pages with folders', async () => {
   assert.equal(manifest.nodes[2].type, 'folder');
 });
 
+test('supports reserved paired folders with no document children', async () => {
+  const options = await fixture(
+    {
+      'Production.md': markdown('Production'),
+      'Production/MVP Scope.md': markdown('MVP Scope'),
+      'Production/MVP Scope/.gitkeep': ''
+    },
+    [
+      {
+        page: 'Production.md',
+        folder: 'Production',
+        children: [
+          {
+            page: 'MVP Scope.md',
+            folder: 'MVP Scope',
+            children: []
+          }
+        ]
+      }
+    ]
+  );
+
+  const manifest = await buildManifest(options);
+  const productionFolder = manifest.nodes[1];
+  assert.equal(productionFolder.children[1].type, 'folder');
+  assert.deepEqual(productionFolder.children[1].children, []);
+});
+
 test('parses front matter metadata', () => {
   const parsed = parseFrontMatter(
     `---

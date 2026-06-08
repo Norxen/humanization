@@ -1,16 +1,16 @@
 ---
 status: planned
-lastReviewed: 2026-06-07
-summary: Planned representative slice proving quality, pipeline, and cross-system integration beyond the prototype.
+lastReviewed: 2026-06-09
+summary: Planned representative slice proving quality, pipeline, and cross-system integration after MVP definition.
 related:
-  - First 10 Floors Prototype.md
+  - MVP Scope.md
   - Roadmap.md
 ---
 # Vertical Slice
 
 ## Purpose
 
-The vertical slice should prove a production-quality section of the game after the core loop prototype succeeds. It must demonstrate representative gameplay, presentation, content production, and narrative delivery rather than maximum content volume.
+The vertical slice should prove a production-quality section of the game after the complete model is understood and MVP scope is defined. It must demonstrate representative gameplay, presentation, content production, and narrative delivery rather than maximum content volume.
 
 ## Required Definition
 

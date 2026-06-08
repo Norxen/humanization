@@ -14,7 +14,11 @@
     "folder": "Production",
     "children": [
       { "page": "Roadmap.md" },
-      { "page": "First 10 Floors Prototype.md" },
+      {
+        "page": "MVP Scope.md",
+        "folder": "MVP Scope",
+        "children": []
+      },
       { "page": "Vertical Slice.md" }
     ]
   },
@@ -33,8 +37,7 @@
           { "page": "Location Interaction Rules.md" },
           { "page": "NPC and Dialog Behavior.md" },
           { "page": "Requests and Dungeon Objectives.md" },
-          { "page": "Hub Events and Consequences.md" },
-          { "page": "First Prototype Hub Scope.md" }
+          { "page": "Hub Events and Consequences.md" }
         ]
       },
       {

@@ -1,6 +1,6 @@
 ---
 status: draft
-lastReviewed: 2026-06-07
+lastReviewed: 2026-06-09
 summary: Dungeon exploration loop, run modes, floor flow, room purposes, extraction, and failure.
 related:
   - Core Loop.md
@@ -66,7 +66,7 @@ Each floor should contain at least one meaningful interaction.
 | Rest Room | Limited healing or repairs. |
 | Trade Room | Exchange resources with survivors or systems. |
 | Boss Room | Major challenge. |
-| Extraction Room | Appears every 10 floors in Expedition Mode. |
+| Extraction Room | Presents an opportunity to secure carried value and leave or continue. |
 
 ## Dungeon Modes
 
@@ -102,33 +102,21 @@ Rules:
 | Feature | Rule |
 | --- | --- |
 | Death penalty | Lose everything gathered during that expedition. |
-| Extraction | Available every 10 floors. |
+| Extraction | Availability and frequency depend on unresolved run-structure rules. |
 | Progression | Can unlock eras, buildings, survivors, bosses, and major story. |
 | Resources | All resource types. |
 | Survivors | Important specialists and story NPCs. |
 | Story | Major data, blueprints, and Return Protocol fragments. |
-| Bosses | Era bosses every 50 floors. |
+| Bosses | Major encounters may gate progression when content and campaign design require them. |
 | Difficulty | Higher and less predictable. |
 
 The main question:
 
-> Do I extract now, or risk 10 more floors?
-
-## Expedition Structure
-
-```text
-Floors 1-10: Entry Segment
-Floors 11-20: Pressure Segment
-Floors 21-30: Risk Segment
-Floors 31-40: Deep Segment
-Floors 41-50: Boss Segment
-```
-
-Each 10-floor block increases pressure and reward.
+> Do I extract now, or accept the risk of continuing deeper?
 
 ## Extraction Gates
 
-Extraction Gates appear every 10 floors in Expedition Mode.
+Extraction opportunities should appear according to run pacing, route structure, objectives, and player capability. Their frequency remains unresolved.
 
 Options can include:
 
@@ -142,25 +130,6 @@ Options can include:
 - Activate a shortcut for future expeditions.
 
 Extraction Gates should be strategic checkpoints, not only exit buttons.
-
-## Example Extraction Gate
-
-```text
-Extraction Gate Reached - Floor 20
-
-Current Rewards:
-- Copper Ore x35
-- Medicinal Fungus x8
-- Damaged Memory Core x1
-- Wounded Survivor x1
-
-Options:
-1. Return to hub with all rewards.
-2. Continue to Floor 21.
-3. Send the survivor back and continue alone.
-4. Store 30% of materials in an emergency cache.
-5. Spend a power cell to heal.
-```
 
 ## Failure
 

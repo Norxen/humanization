@@ -1,6 +1,6 @@
 ---
 status: planned
-lastReviewed: 2026-06-07
+lastReviewed: 2026-06-09
 summary: Planned visual language for The Cradle, civilization eras, enemies, characters, and the evolving hub.
 related:
   - ../Content/Locations and Biomes.md
@@ -18,4 +18,4 @@ related:
 
 ## Completion Criteria
 
-Produce a visual thesis, reference boards, era matrix, readability rules, asset quality bar, and prototype constraints.
+Produce a visual thesis, reference boards, era matrix, readability rules, asset quality bar, and production constraints.

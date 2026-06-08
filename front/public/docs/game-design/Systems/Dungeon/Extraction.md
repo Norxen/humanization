@@ -1,6 +1,6 @@
 ---
 status: planned
-lastReviewed: 2026-06-07
+lastReviewed: 2026-06-09
 summary: Planned extraction availability, commitment, secured-value, and failure rules.
 related:
   - ../Dungeon.md
@@ -23,4 +23,4 @@ Extraction converts carried rewards into permanent value. At an extraction oppor
 
 ## Completion Criteria
 
-Define extraction states, cancellation rules, failure outcomes, UI requirements, and prototype tuning targets.
+Define extraction states, cancellation rules, failure outcomes, UI requirements, pacing dependencies, and representative tuning targets.

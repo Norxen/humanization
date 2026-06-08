@@ -1,6 +1,6 @@
 ---
 status: planned
-lastReviewed: 2026-06-07
+lastReviewed: 2026-06-09
 summary: Planned taxonomy for consumable materials, retained knowledge, blueprints, and milestone information.
 related:
   - ../Progression.md
@@ -18,6 +18,7 @@ Materials are usually consumed by crafting and construction. Knowledge is normal
 - Scarcity and storage targets by era.
 - Blueprint duplication and decoding.
 - Knowledge acquisition, visibility, and gating.
+- Salvage states from unknown through supported, reproducible, and integrated.
 - Protection rules after extraction.
 
 ## Completion Criteria

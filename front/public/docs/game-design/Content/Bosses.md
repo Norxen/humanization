@@ -1,6 +1,6 @@
 ---
 status: planned
-lastReviewed: 2026-06-07
+lastReviewed: 2026-06-09
 summary: Planned boss purpose, progression gates, encounter phases, rewards, and narrative function.
 related:
   - Enemies.md
@@ -19,4 +19,4 @@ related:
 
 ## Completion Criteria
 
-Define the boss template, first prototype decision, campaign roster targets, and acceptance criteria for readability and repetition.
+Define the boss template, systemic purpose, campaign roster targets, progression relationship, and acceptance criteria for readability and repetition.
