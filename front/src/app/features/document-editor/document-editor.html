@@ -1,0 +1,98 @@
+<div class="editor-shell">
+  <header class="editor-toolbar">
+    <div>
+      <span class="mode-label">Editing</span>
+      <strong>{{ document().descriptor.displayName }}</strong>
+      <small>Version {{ baseVersion() }} · Markdown body only</small>
+    </div>
+    <div class="editor-actions">
+      <button type="button" class="secondary" (click)="cancel()">Cancel</button>
+      <button type="button" class="primary" [disabled]="!canSave()" (click)="saveDocument()">
+        {{ saving() ? 'Saving...' : 'Save' }}
+      </button>
+    </div>
+  </header>
+
+  <div class="mobile-tabs" role="tablist" aria-label="Editor view">
+    <button
+      type="button"
+      [class.active]="mobileView() === 'edit'"
+      (click)="mobileView.set('edit')"
+    >Edit</button>
+    <button
+      type="button"
+      [class.active]="mobileView() === 'preview'"
+      (click)="mobileView.set('preview')"
+    >Preview</button>
+  </div>
+
+  @if (!validation().valid || saveError()) {
+    <div class="editor-messages" role="alert">
+      @for (error of validation().errors; track error) {
+        <span>{{ error }}</span>
+      }
+      @if (saveError(); as error) {
+        <span>{{ error }}</span>
+      }
+    </div>
+  }
+
+  <div class="editor-workspace">
+    <section class="editor-pane" [class.mobile-hidden]="mobileView() !== 'edit'">
+      <div class="pane-heading">
+        <span>Markdown</span>
+        <small>{{ dirty() ? 'Unsaved draft' : 'Saved' }}</small>
+      </div>
+      <textarea
+        aria-label="Markdown document body"
+        spellcheck="true"
+        [value]="body()"
+        (input)="updateBody($any($event.target).value)"
+      ></textarea>
+    </section>
+
+    <section class="preview-pane" [class.mobile-hidden]="mobileView() !== 'preview'">
+      <div class="pane-heading">
+        <span>Preview</span>
+        <small>Updates automatically</small>
+      </div>
+      <div
+        class="editor-preview markdown-body document-renderer"
+        [innerHTML]="preview()"
+        (click)="handlePreviewClick($event)"
+      ></div>
+    </section>
+  </div>
+</div>
+
+@if (conflict(); as conflictState) {
+  <div class="conflict-dialog" role="dialog" aria-modal="true" aria-label="Document conflict">
+    <div class="conflict-panel">
+      <header>
+        <div>
+          <span class="mode-label">Save blocked</span>
+          <h2>The document changed while you were editing</h2>
+          <p>Your draft is preserved. Start from the latest version and manually reapply the changes you want.</p>
+        </div>
+      </header>
+      <div class="conflict-comparison">
+        <label>
+          <span>Your unsaved draft</span>
+          <textarea readonly [value]="conflictState.local"></textarea>
+        </label>
+        <label>
+          <span>Latest Firestore version</span>
+          <textarea readonly [value]="conflictState.latest.body"></textarea>
+        </label>
+      </div>
+      <footer>
+        <button type="button" class="secondary" (click)="closeConflictReference()">
+          Keep editing current draft
+        </button>
+        <button type="button" class="primary" (click)="continueFromLatest()">
+          Continue from latest
+        </button>
+      </footer>
+    </div>
+  </div>
+}

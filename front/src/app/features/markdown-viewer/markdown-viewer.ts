@@ -42,6 +42,7 @@ export class MarkdownViewer implements OnDestroy {
   readonly previous = output<void>();
   readonly next = output<void>();
   readonly documentSelected = output<string>();
+  readonly edit = output<void>();
 
   selectRelatedDocument(path: string): void {
     this.documentSelected.emit(path);

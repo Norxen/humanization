@@ -27,6 +27,24 @@ app-markdown-viewer .meta i {
   box-shadow: 0 0 8px var(--accent);
 }
 
+app-markdown-viewer .edit-button {
+  min-height: 30px;
+  margin-left: 6px;
+  padding: 0 11px;
+  border: 1px solid rgba(168, 85, 247, .35);
+  border-radius: 7px;
+  color: var(--accent-bright);
+  background: rgba(168, 85, 247, .08);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+app-markdown-viewer .edit-button:hover {
+  border-color: var(--accent);
+  color: #fff;
+}
+
 app-markdown-viewer article {
   width: min(800px, calc(100% - 64px));
   margin: 0 auto; padding: 76px 0 60px;
@@ -111,16 +129,16 @@ app-markdown-viewer .related-documents button:hover {
   color: var(--accent-bright);
 }
 
-app-markdown-viewer .markdown-body h1,
-app-markdown-viewer .markdown-body h2,
-app-markdown-viewer .markdown-body h3,
-app-markdown-viewer .markdown-body h4 {
+.document-renderer h1,
+.document-renderer h2,
+.document-renderer h3,
+.document-renderer h4 {
   color: #f4eef9;
   font-family: Inter, ui-sans-serif, sans-serif;
   line-height: 1.25;
 }
 
-app-markdown-viewer .markdown-body > h1:first-child {
+.document-renderer > h1:first-child {
   margin-top: 0;
   font-size: clamp(2.8rem, 5vw, 4.6rem);
   font-weight: 650;
@@ -128,13 +146,13 @@ app-markdown-viewer .markdown-body > h1:first-child {
   letter-spacing: -.055em;
 }
 
-app-markdown-viewer .markdown-body h1 {
+.document-renderer h1 {
   margin: 52px 0 20px;
   font-size: 38px;
   font-weight: 650;
 }
 
-app-markdown-viewer .markdown-body h2 {
+.document-renderer h2 {
   margin: 48px 0 15px;
   padding-bottom: 11px;
   border-bottom: 1px solid var(--line);
@@ -143,49 +161,49 @@ app-markdown-viewer .markdown-body h2 {
   letter-spacing: -.025em;
 }
 
-app-markdown-viewer .markdown-body h2::before {
+.document-renderer h2::before {
   content: '#';
   margin-right: 9px;
   color: var(--accent);
   font-weight: 500;
 }
 
-app-markdown-viewer .markdown-body h3 {
+.document-renderer h3 {
   margin: 34px 0 12px;
   font-size: 19px;
   font-weight: 620;
 }
 
-app-markdown-viewer .markdown-body p,
-app-markdown-viewer .markdown-body li {
+.document-renderer p,
+.document-renderer li {
   color: #b3aaba;
   font-size: 15px;
   line-height: 1.85;
 }
 
-app-markdown-viewer .markdown-body p { margin: 0 0 16px; }
-app-markdown-viewer .markdown-body a {
+.document-renderer p { margin: 0 0 16px; }
+.document-renderer a {
   color: var(--accent-bright);
   text-decoration: underline;
   text-decoration-color: rgba(192, 132, 252, .35);
   text-underline-offset: 3px;
   transition: color .15s ease, text-decoration-color .15s ease;
 }
-app-markdown-viewer .markdown-body a:hover {
+.document-renderer a:hover {
   color: #d8b4fe;
   text-decoration-color: currentColor;
 }
-app-markdown-viewer .markdown-body strong { color: #e5dceb; }
+.document-renderer strong { color: #e5dceb; }
 
-app-markdown-viewer .markdown-body ul,
-app-markdown-viewer .markdown-body ol {
+.document-renderer ul,
+.document-renderer ol {
   margin: 18px 0 24px;
   padding-left: 24px;
 }
-app-markdown-viewer .markdown-body li { margin: 8px 0; padding-left: 4px; }
-app-markdown-viewer .markdown-body li::marker { color: var(--accent); }
+.document-renderer li { margin: 8px 0; padding-left: 4px; }
+.document-renderer li::marker { color: var(--accent); }
 
-app-markdown-viewer .markdown-body blockquote {
+.document-renderer blockquote {
   margin: 36px 0;
   padding: 17px 22px;
   border-left: 2px solid var(--accent);
@@ -195,9 +213,9 @@ app-markdown-viewer .markdown-body blockquote {
   font-size: 17px;
   line-height: 1.65;
 }
-app-markdown-viewer .markdown-body blockquote p { margin: 0; color: inherit; font: inherit; }
+.document-renderer blockquote p { margin: 0; color: inherit; font: inherit; }
 
-app-markdown-viewer .markdown-body pre {
+.document-renderer pre {
   position: relative;
   margin: 22px 0;
   padding: 22px 24px;
@@ -210,7 +228,7 @@ app-markdown-viewer .markdown-body pre {
   font: 12px/1.8 Consolas, monospace;
 }
 
-app-markdown-viewer .markdown-body code {
+.document-renderer code {
   padding: 2px 5px;
   border: 1px solid rgba(168, 85, 247, .12);
   border-radius: 4px;
@@ -218,11 +236,11 @@ app-markdown-viewer .markdown-body code {
   background: rgba(168, 85, 247, .1);
   font: .88em Consolas, monospace;
 }
-app-markdown-viewer .markdown-body pre code {
+.document-renderer pre code {
   padding: 0; border: 0; color: inherit; background: transparent; white-space: pre;
 }
 
-app-markdown-viewer .plantuml-block {
+.document-renderer .plantuml-block {
   margin: 28px 0 38px;
   overflow: hidden;
   border: 1px solid var(--line-strong);
@@ -231,7 +249,7 @@ app-markdown-viewer .plantuml-block {
   box-shadow: 0 18px 45px rgba(0, 0, 0, .18);
 }
 
-app-markdown-viewer .plantuml-toolbar {
+.document-renderer .plantuml-toolbar {
   min-height: 48px;
   display: flex;
   align-items: center;
@@ -242,7 +260,7 @@ app-markdown-viewer .plantuml-toolbar {
   background: var(--surface-raised);
 }
 
-app-markdown-viewer .plantuml-label {
+.document-renderer .plantuml-label {
   color: #9d92a7;
   font-size: 9px;
   font-weight: 750;
@@ -250,7 +268,7 @@ app-markdown-viewer .plantuml-label {
   text-transform: uppercase;
 }
 
-app-markdown-viewer .plantuml-controls {
+.document-renderer .plantuml-controls {
   display: flex;
   gap: 3px;
   padding: 3px;
@@ -259,7 +277,7 @@ app-markdown-viewer .plantuml-controls {
   background: var(--background);
 }
 
-app-markdown-viewer .plantuml-controls button {
+.document-renderer .plantuml-controls button {
   min-width: 70px;
   padding: 7px 10px;
   border: 0;
@@ -272,25 +290,25 @@ app-markdown-viewer .plantuml-controls button {
   transition: color .15s ease, background .15s ease, box-shadow .15s ease;
 }
 
-app-markdown-viewer .plantuml-controls button:hover {
+.document-renderer .plantuml-controls button:hover {
   color: var(--ink);
 }
 
-app-markdown-viewer .plantuml-controls button.active {
+.document-renderer .plantuml-controls button.active {
   color: #f3e8ff;
   background: var(--accent);
   box-shadow: 0 4px 14px rgba(168, 85, 247, .25);
 }
 
-app-markdown-viewer .plantuml-panel {
+.document-renderer .plantuml-panel {
   min-height: 180px;
 }
 
-app-markdown-viewer .plantuml-panel.is-hidden {
+.document-renderer .plantuml-panel.is-hidden {
   display: none;
 }
 
-app-markdown-viewer .plantuml-diagram {
+.document-renderer .plantuml-diagram {
   padding: 24px;
   overflow: auto;
   background:
@@ -300,7 +318,7 @@ app-markdown-viewer .plantuml-diagram {
   background-size: 24px 24px;
 }
 
-app-markdown-viewer .plantuml-diagram img {
+.document-renderer .plantuml-diagram img {
   max-width: none;
   min-width: min(100%, 680px);
   margin: 0 auto;
@@ -311,15 +329,15 @@ app-markdown-viewer .plantuml-diagram img {
   cursor: zoom-in;
 }
 
-app-markdown-viewer .plantuml-diagram img.plantuml-image-light {
+.document-renderer .plantuml-diagram img.plantuml-image-light {
   display: none !important;
 }
 
-app-markdown-viewer .plantuml-diagram img.plantuml-image-dark {
+.document-renderer .plantuml-diagram img.plantuml-image-dark {
   display: block !important;
 }
 
-app-markdown-viewer .plantuml-source pre {
+.document-renderer .plantuml-source pre {
   min-height: 180px;
   margin: 0;
   border: 0;
@@ -448,28 +466,28 @@ app-markdown-viewer .diagram-lightbox-viewport img {
   box-shadow: none;
 }
 
-app-markdown-viewer .markdown-body table {
+.document-renderer table {
   width: 100%;
   margin: 24px 0 32px;
   border-collapse: collapse;
   font-size: 13px;
 }
-app-markdown-viewer .markdown-body th,
-app-markdown-viewer .markdown-body td {
+.document-renderer th,
+.document-renderer td {
   padding: 11px 13px;
   border: 1px solid var(--line);
   color: #b3aaba;
   text-align: left;
   vertical-align: top;
 }
-app-markdown-viewer .markdown-body th {
+.document-renderer th {
   color: #e8deef;
   background: var(--surface-raised);
 }
-app-markdown-viewer .markdown-body tbody tr { transition: background .15s ease; }
-app-markdown-viewer .markdown-body tbody tr:hover { background: rgba(168, 85, 247, .045); }
+.document-renderer tbody tr { transition: background .15s ease; }
+.document-renderer tbody tr:hover { background: rgba(168, 85, 247, .045); }
 
-app-markdown-viewer .markdown-body img {
+.document-renderer img {
   display: block;
   max-width: 100%;
   height: auto;
@@ -479,7 +497,7 @@ app-markdown-viewer .markdown-body img {
   background: var(--surface);
   box-shadow: 0 20px 50px rgba(0, 0, 0, .2);
 }
-app-markdown-viewer .markdown-body hr {
+.document-renderer hr {
   margin: 40px 0;
   border: 0;
   border-top: 1px solid var(--line);
@@ -497,16 +515,16 @@ app-markdown-viewer .markdown-body hr {
   app-markdown-viewer .toolbar { padding: 0 18px; }
   app-markdown-viewer .meta { display: none; }
   app-markdown-viewer article { width: calc(100% - 36px); padding-top: 52px; }
-  app-markdown-viewer .markdown-body > h1:first-child { font-size: 2.65rem; }
-  app-markdown-viewer .markdown-body table { display: block; overflow-x: auto; }
-  app-markdown-viewer .plantuml-toolbar {
+  .document-renderer > h1:first-child { font-size: 2.65rem; }
+  .document-renderer table { display: block; overflow-x: auto; }
+  .document-renderer .plantuml-toolbar {
     align-items: flex-start;
     flex-direction: column;
     padding: 12px;
   }
-  app-markdown-viewer .plantuml-controls { width: 100%; }
-  app-markdown-viewer .plantuml-controls button { flex: 1; }
-  app-markdown-viewer .plantuml-diagram { padding: 14px; }
+  .document-renderer .plantuml-controls { width: 100%; }
+  .document-renderer .plantuml-controls button { flex: 1; }
+  .document-renderer .plantuml-diagram { padding: 14px; }
   app-markdown-viewer .diagram-lightbox { padding: 0; }
   app-markdown-viewer .diagram-lightbox-panel {
     width: 100%;

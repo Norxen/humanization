@@ -5,12 +5,14 @@ import {
   LoadedDocument
 } from '../models/document-page.model';
 import { MarkdownRendererService } from './markdown-renderer.service';
+import { DOCUMENT_REPOSITORY } from '../repositories/document.repository';
 import { AppUrlService } from './app-url.service';
 
 @Injectable({ providedIn: 'root' })
 export class DocumentationStore {
   private readonly renderer = inject(MarkdownRendererService);
   private readonly appUrl = inject(AppUrlService);
+  private readonly repository = inject(DOCUMENT_REPOSITORY);
   private loadSequence = 0;
 
   readonly manifest = signal<DocumentationManifest | null>(null);
@@ -55,24 +57,24 @@ export class DocumentationStore {
     this.error.set(null);
 
     try {
-      const response = await fetch(this.appUrl.resolve(descriptor.assetUrl));
-      if (!response.ok) {
-        throw new Error(`Document request failed with ${response.status}.`);
-      }
-
-      const source = await response.text();
-      const markdown = this.stripFrontMatter(source);
-      const html = await this.renderer.render(markdown, descriptor);
+      const stored = await this.repository.load(descriptor.path);
+      const runtimeDescriptor = {
+        ...descriptor,
+        lastReviewed: stored.lastReviewed
+      };
+      const html = await this.renderer.render(stored.body, runtimeDescriptor);
       if (sequence !== this.loadSequence) {
         return;
       }
 
       this.activeDocument.set({
-        descriptor,
-        title: this.extractTitle(markdown, descriptor.name),
-        readingTime: this.calculateReadingTime(markdown),
-        markdown,
-        html
+        descriptor: runtimeDescriptor,
+        title: this.extractTitle(stored.body, descriptor.name),
+        readingTime: this.calculateReadingTime(stored.body),
+        markdown: stored.body,
+        html,
+        version: stored.version,
+        updatedAt: stored.updatedAt
       });
     } catch (error) {
       if (sequence === this.loadSequence) {
@@ -98,6 +100,35 @@ export class DocumentationStore {
     return this.selectPage(this.activePageIndex() + 1);
   }
 
+  async saveCurrent(body: string, expectedVersion: number): Promise<LoadedDocument> {
+    const current = this.activeDocument();
+    if (!current) {
+      throw new Error('No active document is available to save.');
+    }
+
+    const saved = await this.repository.save(
+      current.descriptor.path,
+      body,
+      expectedVersion
+    );
+    const descriptor = {
+      ...current.descriptor,
+      lastReviewed: saved.lastReviewed
+    };
+    const html = await this.renderer.render(saved.body, descriptor);
+    const loaded: LoadedDocument = {
+      descriptor,
+      title: this.extractTitle(saved.body, descriptor.name),
+      readingTime: this.calculateReadingTime(saved.body),
+      markdown: saved.body,
+      html,
+      version: saved.version,
+      updatedAt: saved.updatedAt
+    };
+    this.activeDocument.set(loaded);
+    return loaded;
+  }
+
   private extractTitle(markdown: string, fallbackName: string): string {
     const heading = markdown.match(/^#\s+(.+)$/m)?.[1]?.trim();
     return heading ?? fallbackName.replace(/\.md$/i, '').replaceAll(/[-_]/g, ' ');
@@ -108,12 +139,4 @@ export class DocumentationStore {
     return `${Math.max(1, Math.ceil(words / 220))} min read`;
   }
 
-  private stripFrontMatter(markdown: string): string {
-    if (!markdown.startsWith('---\n')) {
-      return markdown;
-    }
-
-    const end = markdown.indexOf('\n---\n', 4);
-    return end === -1 ? markdown : markdown.slice(end + 5);
-  }
 }

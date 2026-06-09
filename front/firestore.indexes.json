@@ -1,0 +1,15 @@
+{
+  "indexes": [],
+  "fieldOverrides": [
+    {
+      "collectionGroup": "documents",
+      "fieldPath": "body",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "revisions",
+      "fieldPath": "body",
+      "indexes": []
+    }
+  ]
+}

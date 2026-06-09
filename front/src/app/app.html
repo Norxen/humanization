@@ -31,14 +31,25 @@
         <button type="button" (click)="store.initialize()">Try again</button>
       </div>
     } @else if (store.activeDocument(); as document) {
-      <app-markdown-viewer
-        [document]="document"
-        [previousPage]="store.previousPage()"
-        [nextPage]="store.nextPage()"
-        (documentSelected)="store.selectPath($event)"
-        (previous)="goPrevious()"
-        (next)="goNext()"
-      />
+      @if (editing()) {
+        <app-document-editor
+          [document]="document"
+          [pages]="store.pages()"
+          (dirtyChanged)="editorDirty.set($event)"
+          (cancelled)="finishEditing()"
+          (saved)="finishEditing()"
+        />
+      } @else {
+        <app-markdown-viewer
+          [document]="document"
+          [previousPage]="store.previousPage()"
+          [nextPage]="store.nextPage()"
+          (documentSelected)="selectPath($event)"
+          (edit)="editing.set(true)"
+          (previous)="goPrevious()"
+          (next)="goNext()"
+        />
+      }
       @if (store.loading()) {
         <div class="loading-bar"></div>
       }

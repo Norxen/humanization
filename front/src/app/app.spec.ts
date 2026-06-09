@@ -2,6 +2,84 @@ import { TestBed } from '@angular/core/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DocumentationManifest } from './core/models/document-page.model';
 import { App } from './app';
+import {
+  DOCUMENT_REPOSITORY,
+  DocumentConflictError,
+  DocumentRepository
+} from './core/repositories/document.repository';
+import { StoredDocument } from './core/models/document-page.model';
+
+class MemoryDocumentRepository extends DocumentRepository {
+  forceConflict = false;
+  readonly documents = new Map<string, StoredDocument>([
+    [
+      'index.md',
+      {
+        path: 'index.md',
+        body: `# Index
+
+Read the [Story Brief](storytelling.md).
+
+\`\`\`plantuml
+@startuml
+Alice -> Bob: Hello
+@enduml
+\`\`\``,
+        version: 1,
+        lastReviewed: '2026-06-07',
+        createdAt: new Date('2026-06-07T00:00:00Z'),
+        updatedAt: new Date('2026-06-07T00:00:00Z')
+      }
+    ],
+    [
+      'storytelling.md',
+      {
+        path: 'storytelling.md',
+        body: `# Story Brief
+
+The narrative foundation.`,
+        version: 3,
+        lastReviewed: '2026-06-06',
+        createdAt: new Date('2026-06-06T00:00:00Z'),
+        updatedAt: new Date('2026-06-06T00:00:00Z')
+      }
+    ]
+  ]);
+
+  load(path: string): Promise<StoredDocument> {
+    const document = this.documents.get(path);
+    return document
+      ? Promise.resolve({ ...document })
+      : Promise.reject(new Error(`Missing ${path}`));
+  }
+
+  save(path: string, body: string, expectedVersion: number): Promise<StoredDocument> {
+    const current = this.documents.get(path);
+    if (this.forceConflict && current) {
+      return Promise.reject(
+        new DocumentConflictError({
+          ...current,
+          body: '# Index\n\nChanged elsewhere.',
+          version: current.version + 1
+        })
+      );
+    }
+    if (!current || current.version !== expectedVersion) {
+      return Promise.reject(new Error('Version conflict'));
+    }
+    const saved = {
+      ...current,
+      body,
+      version: current.version + 1,
+      lastReviewed: '2026-06-09',
+      updatedAt: new Date('2026-06-09T00:00:00Z')
+    };
+    this.documents.set(path, saved);
+    return Promise.resolve({ ...saved });
+  }
+}
+
+let repository: MemoryDocumentRepository;
 
 const manifest: DocumentationManifest = {
   name: 'game-design',
@@ -9,10 +87,10 @@ const manifest: DocumentationManifest = {
   nodes: [
     {
       id: 'index.md',
-      name: 'index.md',
+      name: 'Index.md',
       displayName: 'Index',
       displayPath: ['Index'],
-      title: 'Game Design Index',
+      title: 'Index',
       type: 'markdown',
       path: 'index.md',
       assetUrl: 'docs/game-design/index.md',
@@ -24,7 +102,7 @@ const manifest: DocumentationManifest = {
     },
     {
       id: 'storytelling.md',
-      name: 'storytelling.md',
+      name: 'Storytelling.md',
       displayName: 'Storytelling',
       displayPath: ['Storytelling'],
       title: 'Story Brief',
@@ -42,10 +120,10 @@ const manifest: DocumentationManifest = {
   pages: [
     {
       id: 'index.md',
-      name: 'index.md',
+      name: 'Index.md',
       displayName: 'Index',
       displayPath: ['Index'],
-      title: 'Game Design Index',
+      title: 'Index',
       path: 'index.md',
       assetUrl: 'docs/game-design/index.md',
       pageIndex: 0,
@@ -56,7 +134,7 @@ const manifest: DocumentationManifest = {
     },
     {
       id: 'storytelling.md',
-      name: 'storytelling.md',
+      name: 'Storytelling.md',
       displayName: 'Storytelling',
       displayPath: ['Storytelling'],
       title: 'Story Brief',
@@ -74,6 +152,7 @@ const manifest: DocumentationManifest = {
 describe('App', () => {
   beforeEach(async () => {
     localStorage.clear();
+    repository = new MemoryDocumentRepository();
     vi.stubGlobal(
       'fetch',
       vi.fn(async (input: string | URL | Request) => {
@@ -85,40 +164,17 @@ describe('App', () => {
           });
         }
 
-        const markdown = url.endsWith('storytelling.md')
-          ? `---
-status: review
-lastReviewed: 2026-06-06
-summary: Narrative foundation.
-related:
-  - index.md
----
-# Story Brief
-
-The narrative foundation.`
-          : `---
-status: draft
-lastReviewed: 2026-06-07
-summary: Entry point for the game design.
-related:
-  - storytelling.md
----
-# Game Design Index
-
-Read the [Story Brief](storytelling.md).
-
-\`\`\`plantuml
-@startuml
-Alice -> Bob: Hello
-@enduml
-\`\`\``;
-        return new Response(markdown, { status: 200 });
+        return new Response('Not found', { status: 404 });
       })
     );
 
     await TestBed.configureTestingModule({
       imports: [App]
-    }).compileComponents();
+    })
+      .overrideProvider(DOCUMENT_REPOSITORY, {
+        useValue: repository
+      })
+      .compileComponents();
   });
 
   afterEach(() => {
@@ -138,7 +194,7 @@ Alice -> Bob: Hello
     await vi.waitFor(() => {
       fixture.detectChanges();
       expect(fixture.nativeElement.querySelector('h1')?.textContent).toContain(
-        'Game Design Index'
+        'Index'
       );
     });
 
@@ -203,6 +259,142 @@ Alice -> Bob: Hello
     expect(folder.classList.contains('active')).toBe(true);
   });
 
+  it('should edit, preview, and save the active Firestore document', async () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('.edit-button')).toBeTruthy();
+    });
+
+    fixture.nativeElement.querySelector('.edit-button').click();
+    fixture.detectChanges();
+
+    const textarea = fixture.nativeElement.querySelector(
+      'textarea[aria-label="Markdown document body"]'
+    ) as HTMLTextAreaElement;
+    textarea.value = `# Index
+
+Edited body.`;
+    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+    fixture.detectChanges();
+
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('.editor-preview')?.textContent).toContain(
+        'Edited body.'
+      );
+    });
+
+    const saveButton = fixture.nativeElement.querySelector(
+      '.editor-actions .primary'
+    ) as HTMLButtonElement;
+    expect(saveButton.disabled).toBe(false);
+    saveButton.click();
+
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('.edit-button')).toBeTruthy();
+      expect(fixture.nativeElement.querySelector('.markdown-body')?.textContent).toContain(
+        'Edited body.'
+      );
+    });
+
+    expect(fixture.nativeElement.querySelector('.document-summary-heading')?.textContent).toContain(
+      '2026-06-09'
+    );
+  });
+
+  it('should restore a persisted draft when entering Edit mode', async () => {
+    localStorage.setItem(
+      'manuscript-draft:index.md',
+      JSON.stringify({
+        body: '# Index\n\nRestored draft.',
+        baseVersion: 1
+      })
+    );
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('.edit-button')).toBeTruthy();
+    });
+    fixture.nativeElement.querySelector('.edit-button').click();
+    fixture.detectChanges();
+
+    expect(
+      (fixture.nativeElement.querySelector(
+        'textarea[aria-label="Markdown document body"]'
+      ) as HTMLTextAreaElement).value
+    ).toContain('Restored draft.');
+  });
+
+  it('should block invalid Markdown and display validation errors', async () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('.edit-button')).toBeTruthy();
+    });
+    fixture.nativeElement.querySelector('.edit-button').click();
+    fixture.detectChanges();
+
+    const textarea = fixture.nativeElement.querySelector(
+      'textarea[aria-label="Markdown document body"]'
+    ) as HTMLTextAreaElement;
+    textarea.value = '# Wrong title\n\n[Missing](Missing.md)';
+    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.editor-messages')?.textContent).toContain(
+      'The H1 heading must be "Index".'
+    );
+    expect(fixture.nativeElement.querySelector('.editor-messages')?.textContent).toContain(
+      'Broken internal Markdown link'
+    );
+    expect(
+      (fixture.nativeElement.querySelector('.editor-actions .primary') as HTMLButtonElement)
+        .disabled
+    ).toBe(true);
+  });
+
+  it('should preserve the draft and show both versions on a save conflict', async () => {
+    repository.forceConflict = true;
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('.edit-button')).toBeTruthy();
+    });
+    fixture.nativeElement.querySelector('.edit-button').click();
+    fixture.detectChanges();
+
+    const textarea = fixture.nativeElement.querySelector(
+      'textarea[aria-label="Markdown document body"]'
+    ) as HTMLTextAreaElement;
+    textarea.value = '# Index\n\nMy local edit.';
+    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+    fixture.detectChanges();
+    (fixture.nativeElement.querySelector('.editor-actions .primary') as HTMLButtonElement).click();
+
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('.conflict-dialog')).toBeTruthy();
+    });
+
+    const comparisons = fixture.nativeElement.querySelectorAll(
+      '.conflict-comparison textarea'
+    ) as NodeListOf<HTMLTextAreaElement>;
+    expect(comparisons[0].value).toContain('My local edit.');
+    expect(comparisons[1].value).toContain('Changed elsewhere.');
+    expect(localStorage.getItem('manuscript-draft:index.md')).toContain('My local edit.');
+  });
+
   it('should scroll to the top after loading the previous document', async () => {
     const scrollTo = vi.spyOn(window, 'scrollTo').mockImplementation(() => undefined);
     const fixture = TestBed.createComponent(App);
@@ -227,7 +419,7 @@ Alice -> Bob: Hello
     await vi.waitFor(() => {
       fixture.detectChanges();
       expect(fixture.nativeElement.querySelector('h1')?.textContent).toContain(
-        'Game Design Index'
+        'Index'
       );
     });
 

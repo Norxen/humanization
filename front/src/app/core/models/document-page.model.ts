@@ -31,4 +31,15 @@ export interface LoadedDocument {
   readingTime: string;
   markdown: string;
   html: SafeHtml;
+  version: number;
+  updatedAt: Date | null;
+}
+
+export interface StoredDocument {
+  path: string;
+  body: string;
+  version: number;
+  lastReviewed: string;
+  createdAt: Date | null;
+  updatedAt: Date | null;
 }
