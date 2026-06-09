@@ -29,6 +29,7 @@
 .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .chevron { width: 10px; color: #68606f; font-size: 15px; transition: transform .15s ease; }
 .chevron.expanded { color: #a99eb3; transform: rotate(90deg); }
+.chevron.empty { visibility: hidden; }
 .folder-icon {
   width: 14px; height: 10px; border-radius: 2px;
   background: #686170;

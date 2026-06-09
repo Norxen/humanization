@@ -30,7 +30,6 @@ export class FileTree {
   selectNode(node: FileTreeNode): void {
     if (node.type === 'folder') {
       this.toggleFolder(node.id);
-      return;
     }
 
     if (node.pageIndex !== undefined) {

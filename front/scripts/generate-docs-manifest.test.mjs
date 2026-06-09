@@ -30,7 +30,7 @@ async function fixture(files, navigation) {
   return { sourceDirectory: root, navigationPath };
 }
 
-test('uses configured order and pairs pages with folders', async () => {
+test('uses configured order and creates selectable content-bearing folders', async () => {
   const options = await fixture(
     {
       'Index.md': markdown('Index'),
@@ -54,7 +54,11 @@ test('uses configured order and pairs pages with folders', async () => {
     'Systems/Core Loop.md'
   ]);
   assert.equal(manifest.nodes[1].displayName, 'Systems');
-  assert.equal(manifest.nodes[2].type, 'folder');
+  assert.equal(manifest.nodes[1].type, 'folder');
+  assert.equal(manifest.nodes[1].pageIndex, 1);
+  assert.equal(manifest.nodes[1].path, 'Systems.md');
+  assert.equal(manifest.nodes[1].children[0].type, 'markdown');
+  assert.equal(manifest.nodes.length, 2);
 });
 
 test('supports reserved paired folders with no document children', async () => {
@@ -80,9 +84,14 @@ test('supports reserved paired folders with no document children', async () => {
   );
 
   const manifest = await buildManifest(options);
-  const productionFolder = manifest.nodes[1];
-  assert.equal(productionFolder.children[1].type, 'folder');
-  assert.deepEqual(productionFolder.children[1].children, []);
+  const productionFolder = manifest.nodes[0];
+  const mvpFolder = productionFolder.children[0];
+  assert.equal(productionFolder.type, 'folder');
+  assert.equal(productionFolder.pageIndex, 0);
+  assert.equal(mvpFolder.type, 'folder');
+  assert.equal(mvpFolder.pageIndex, 1);
+  assert.equal(mvpFolder.path, 'Production/MVP Scope.md');
+  assert.deepEqual(mvpFolder.children, []);
 });
 
 test('parses front matter metadata', () => {

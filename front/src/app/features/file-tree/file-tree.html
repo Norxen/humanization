@@ -26,7 +26,11 @@
       (click)="selectNode(node)"
     >
       @if (node.type === 'folder') {
-        <span class="chevron" [class.expanded]="isExpanded(node.id)">&gt;</span>
+        <span
+          class="chevron"
+          [class.expanded]="isExpanded(node.id)"
+          [class.empty]="!node.children?.length"
+        >&gt;</span>
         <span class="folder-icon"></span>
       } @else if (node.type === 'markdown') {
         <span class="file-icon">M</span>

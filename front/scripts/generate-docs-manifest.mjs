@@ -190,7 +190,6 @@ export async function buildManifest({ sourceDirectory, navigationPath }) {
       };
       descriptor.pageIndex = pages.length;
       pages.push(descriptor);
-      nodes.push({ ...descriptor, type: 'markdown' });
 
       if (entry.folder || entry.children) {
         const folderName = entry.folder;
@@ -213,12 +212,12 @@ export async function buildManifest({ sourceDirectory, navigationPath }) {
           [...displayParents, displayName(folderName)]
         );
         nodes.push({
-          id: folderPath,
-          name: folderName,
-          displayName: displayName(folderName),
+          ...descriptor,
           type: 'folder',
           children
         });
+      } else {
+        nodes.push({ ...descriptor, type: 'markdown' });
       }
     }
     return nodes;

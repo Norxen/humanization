@@ -13,7 +13,7 @@ related:
 - Use descriptive title-case filenames with spaces.
 - Every Markdown file must contain exactly one H1.
 - The H1 must match the filename without `.md`.
-- Every folder must have a same-named overview page immediately before it in navigation.
+- Every content-bearing folder must have a same-named overview page.
 
 ## Front Matter
 
@@ -23,7 +23,12 @@ Valid statuses are `planned`, `draft`, `review`, and `approved`. Dates use `YYYY
 
 ## Navigation and Links
 
-Add every page to `docs.navigation.json`. Navigation order controls the tree and previous/next controls. Use relative Markdown links and include `.md`.
+Add every page to `docs.navigation.json`. Navigation order controls the tree and previous/next controls.
+
+- `{ page }` creates a leaf document.
+- `{ page, folder, children }` creates one selectable folder. Its content comes from the same-named overview page; the tree must not show a duplicate document row.
+
+Use relative Markdown links and include `.md`.
 
 ## Diagrams
 

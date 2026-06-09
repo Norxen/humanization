@@ -28,14 +28,15 @@ const manifest: DocumentationManifest = {
       displayName: 'Storytelling',
       displayPath: ['Storytelling'],
       title: 'Story Brief',
-      type: 'markdown',
+      type: 'folder',
       path: 'storytelling.md',
       assetUrl: 'docs/game-design/storytelling.md',
       pageIndex: 1,
       status: 'review',
       lastReviewed: '2026-06-06',
       summary: 'Narrative foundation.',
-      related: ['index.md']
+      related: ['index.md'],
+      children: []
     }
   ],
   pages: [
@@ -178,6 +179,28 @@ Alice -> Bob: Hello
       left: 0,
       behavior: 'auto'
     });
+  });
+
+  it('should load markdown content by selecting a folder node', async () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelectorAll('.tree-row')).toHaveLength(2);
+    });
+
+    const folder = fixture.nativeElement.querySelector('.tree-row.folder') as HTMLButtonElement;
+    folder.click();
+
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('h1')?.textContent).toContain(
+        'Story Brief'
+      );
+    });
+
+    expect(folder.classList.contains('active')).toBe(true);
   });
 
   it('should scroll to the top after loading the previous document', async () => {
