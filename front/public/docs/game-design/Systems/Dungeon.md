@@ -1,172 +1,124 @@
 ---
 status: draft
 lastReviewed: 2026-06-09
-summary: Dungeon exploration loop, run modes, floor flow, room purposes, extraction, and failure.
+summary: Authoritative expedition structure covering run states, generated spaces, objectives, extraction, and failure.
 related:
   - Core Loop.md
-  - Hub/Requests and Dungeon Objectives.md
-  - Dungeon/Run Structure.md
-  - Dungeon/Extraction.md
+  - Hub/Requests and Consequences.md
+  - Dungeon/Encounters.md
+  - Progression.md
 ---
 # Dungeon
 
 ## Purpose
 
-The dungeon is the risk layer. It creates pressure, rewards, discovery, and the decision to extract or push deeper.
+The dungeon converts settlement needs into dangerous expeditions. Each run should provide a clear purpose, readable opportunities, increasing unsecured value, and repeated decisions about whether to continue or extract.
+
+## Run State
+
+```text
+Review hub needs
+-> Select a primary objective and expedition mode
+-> Prepare loadout
+-> Enter a generated route
+-> Explore, fight, solve, rescue, and recover value
+-> Reach an extraction opportunity
+-> Extract, continue deeper, or fail
+-> Resolve delivered and lost value in the hub
+```
+
+The exact run duration, route length, rest points, and backtracking rules remain unresolved. They must be determined through pacing tests rather than fixed floor counts.
 
 ## Moment-to-Moment Loop
 
 ```text
-Move
--> Observe
--> Decide
--> Fight, avoid, or interact
--> Collect
--> Manage risk
--> Move deeper
+Enter a space
+-> Read threats, exits, resources, and objective signals
+-> Choose whether and how to engage
+-> Spend time, health, tools, or supplies
+-> Secure value or information
+-> Reassess the route and extraction risk
 ```
 
-The player should constantly make small decisions:
+Spaces can focus on combat, hazards, resources, rescue, machinery, navigation, story evidence, or a combination. Not every room should become an arena.
 
-- Fight this enemy or avoid it?
-- Spend durability or save it?
-- Use the last healing item now?
-- Mine a noisy resource node?
-- Open the sealed chamber?
-- Rescue the NPC before clearing the floor?
-- Carry the unstable artifact?
-- Push to the next extraction point?
+## Expedition Modes
 
-## Floor Loop
+Survey and Expedition modes remain useful working concepts:
 
-```text
-Enter floor
--> Explore rooms
--> Fight enemies
--> Gather resources
--> Find events
--> Make choices
--> Reach transition
--> Continue or extract
-```
+- **Survey** prioritizes information, mapping, low-commitment recovery, and discovering future opportunities.
+- **Expedition** pursues a known settlement objective with stronger generation influence and greater commitment.
 
-Each floor should contain at least one meaningful interaction.
+Their exact rules, rewards, and durations remain unresolved. They should only remain separate if playtests show they create meaningfully different planning and risk.
 
-## Room Types
+## Generated Space Model
 
-| Room Type | Purpose |
+Levels are generated as coherent spaces using a small set of tags:
+
+| Tag | Examples |
 | --- | --- |
-| Combat Room | Fight enemies. |
-| Resource Room | Gather materials. |
-| Survivor Room | Rescue or interact with NPCs. |
-| Puzzle Room | Use tools or logic to unlock rewards. |
-| Hazard Room | Environmental danger. |
-| Lore Room | Discover logs or memory fragments. |
-| Elite Room | Hard fight with better reward. |
-| Rest Room | Limited healing or repairs. |
-| Trade Room | Exchange resources with survivors or systems. |
-| Boss Room | Major challenge. |
-| Extraction Room | Presents an opportunity to secure carried value and leave or continue. |
+| Era | Survival, Settlement, Metalworking, Mechanization, Electricity, Connectivity. |
+| Theme | Cavern, ruin, utility, organic, workshop, archive, transit. |
+| Threat | Low, medium, high, crisis. |
+| Resource Bias | Food, medicine, scrap, copper, fuel, data. |
+| Special State | Flooded, dark, infested, collapsing, powered, signal-active. |
 
-## Dungeon Modes
+Generation should:
 
-| Mode | Purpose | Risk |
-| --- | --- | --- |
-| Survey Mode | Farming, practice, minor lore, side objectives. | Lower. |
-| Expedition Mode | Major progress, key survivors, blueprints, bosses, era advancement. | Higher. |
+1. Choose depth and supported era band.
+2. Choose theme, threat, resource bias, and special state.
+3. Apply tracked objective compatibility.
+4. Build a valid critical route and optional spaces.
+5. Place the objective anchor and extraction logic.
+6. Add encounters, landmarks, secrets, and narrative opportunities.
+7. Validate reachability and resource assumptions.
 
-## Survey Mode
+The request system specifies compatible tags and certainty, not exact room coordinates. Seed behavior, algorithm choice, debug visualization, and generation validity tests remain technical design work.
 
-Survey Mode represents controlled exploration of stabilized or previously accessed areas.
+## Objectives
 
-Rules:
+A tracked objective defines:
 
-| Feature | Rule |
-| --- | --- |
-| Death penalty | Lose a percentage of carried resources. |
-| Progression | Cannot unlock new eras or major content. |
-| Resources | Common and some uncommon materials. |
-| Survivors | Minor NPCs or clues only. |
-| Story | Minor lore, environmental logs, rumors. |
-| Bosses | No major era bosses. |
-| Difficulty | Lower or more controlled. |
+- Target and minimum success.
+- Compatible zones and source rules.
+- Placement certainty.
+- Objective anchor or interaction.
+- Failure consequence.
+- Exact hub payoff.
 
-Survey Mode should feel useful, but it should not replace Expedition Mode.
+The main objective must be clear even when compatible secondary opportunities exist. A promise of guaranteed access is only valid when both the player-facing objective and generator support it.
 
-## Expedition Mode
+## Extraction
 
-Expedition Mode represents entry into unstable, sealed, or enemy-controlled sections.
+Extraction converts carried rewards into permanent value. At each opportunity, the player chooses between securing current progress and accepting additional risk.
 
-Rules:
+Required states:
 
-| Feature | Rule |
-| --- | --- |
-| Death penalty | Lose everything gathered during that expedition. |
-| Extraction | Availability and frequency depend on unresolved run-structure rules. |
-| Progression | Can unlock eras, buildings, survivors, bosses, and major story. |
-| Resources | All resource types. |
-| Survivors | Important specialists and story NPCs. |
-| Story | Major data, blueprints, and Return Protocol fragments. |
-| Bosses | Major encounters may gate progression when content and campaign design require them. |
-| Difficulty | Higher and less predictable. |
+- **Carried:** in the expedition inventory and vulnerable to loss.
+- **Secured:** objective acquired but not yet delivered.
+- **Extracting:** the player has committed to the extraction process.
+- **Delivered:** value has reached the hub and becomes persistent.
+- **Lost:** unsecured value is removed or transformed by failure rules.
 
-The main question:
-
-> Do I extract now, or accept the risk of continuing deeper?
-
-## Extraction Gates
-
-Extraction opportunities should appear according to run pacing, route structure, objectives, and player capability. Their frequency remains unresolved.
-
-Options can include:
-
-- Return to the hub with all rewards.
-- Continue deeper.
-- Send back part of the resources.
-- Send rescued survivors back while continuing alone.
-- Store materials in an emergency cache.
-- Spend a limited resource to heal.
-- Call hub support if unlocked.
-- Activate a shortcut for future expeditions.
-
-Extraction Gates should be strategic checkpoints, not only exit buttons.
+Extraction frequency, activation cost, defense, timing, cancellation, escort behavior, and mode-specific loss remain unresolved. No fixed extraction cadence is currently defined.
 
 ## Failure
 
-Failure should hurt, but it should not destroy motivation.
+Failure should create pressure and a new decision without casually deleting secured civilization progress.
 
-Survey Mode death:
+- Delivered value remains safe unless a later explicit system targets it.
+- Secured but undelivered value is normally lost.
+- Failed objectives can worsen hub pressure or change future opportunities.
+- Named survivor loss requires warning and state escalation before permanent consequences.
+- Recovery rules must prevent a failure spiral while preserving expedition tension.
 
-- Lose a percentage of gathered resources.
-- Keep minor lore.
-- Return to hub.
-- Possibly gain small experience or knowledge scraps.
+## Validation Criteria
 
-Expedition Mode death:
+Dungeon design is ready for review when:
 
-- Lose resources gathered during the expedition.
-- Lose unextracted blueprints.
-- Lose unextracted major story data.
-- Lose unextracted rescued survivors.
-- Return to hub injured or delayed.
-- Dungeon layout may change.
-
-The player always keeps:
-
-- Previously extracted resources.
-- Built hub upgrades.
-- Unlocked knowledge.
-- Rescued survivors already brought home.
-- Permanent era progress.
-- Permanent player upgrades.
-
-## Dungeon Loop Summary
-
-```text
-Enter floor
--> Clear or avoid threats
--> Gather rewards
--> Manage inventory and health
--> Reach extraction
--> Leave safely or push deeper
-```
+- The run state machine and persistence boundaries are explicit.
+- Target run durations are supported by playtests.
+- Generated routes cannot produce unreachable objectives or impossible costs.
+- Extraction produces a meaningful continue-or-leave decision.
+- Hub objectives influence runs without making generation repetitive.
+- Survey and Expedition modes either prove distinct value or are merged.

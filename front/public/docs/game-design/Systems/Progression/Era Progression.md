@@ -5,8 +5,8 @@ summary: Six-era civilization capability model governing sustainable technology,
 related:
   - ../Progression.md
   - ../Combat.md
-  - ../Hub/Building Purpose and Era Levels.md
-  - ../../Narrative/Campaign Structure.md
+  - ../Hub.md
+  - ../../Narrative/Story and Campaign.md
 ---
 # Era Progression
 

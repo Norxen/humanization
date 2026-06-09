@@ -1,7 +1,7 @@
 ---
 status: draft
 lastReviewed: 2026-06-09
-summary: Entry point and reading map for the complete game design knowledge base.
+summary: Entry point and reduced reading map for the complete game design knowledge base.
 related:
   - Vision.md
   - Production.md
@@ -12,7 +12,7 @@ related:
 
 ## Purpose
 
-This document is the entry point for the full game-design knowledge base. The documentation separates vision, production milestones, gameplay systems, content, narrative, presentation, and shared reference material so decisions can develop without losing their relationships.
+This document is the entry point for the game-design knowledge base. The tree is intentionally compact: authoritative system pages hold rules, while child pages exist only for topics with distinct ownership.
 
 ## Core Design Statement
 
@@ -23,16 +23,17 @@ The player prepares in a growing human hub, descends into The Cradle to gather r
 | Section | Covers |
 | --- | --- |
 | [Vision](Vision.md) | Game pillars, player fantasy, experience goals, scope, and non-goals. |
-| [Production](Production.md) | Complexity mapping, reserved MVP definition, vertical slice, roadmap, and milestone proof points. |
+| [Production](Production.md) | Complexity mapping and the reserved MVP definition. |
 | [Systems](Systems.md) | Core loop, hub, dungeon, progression, and combat rules. |
-| [Content](Content.md) | Enemies, bosses, items, locations, survivors, and production templates. |
-| [Narrative](Narrative.md) | Premise, world, cast, campaign, and narrative delivery. |
-| [Presentation](Presentation.md) | Art, UI/UX, audio, and accessibility direction. |
+| [Content](Content.md) | Shared requirements for enemies, bosses, items, locations, and survivors. |
+| [Narrative](Narrative.md) | Premise, world truth, cast, campaign, and delivery requirements. |
+| [Presentation](Presentation.md) | Combined visual, UI/UX, audio, and accessibility requirements. |
 | [Reference](Reference.md) | Glossary, open questions, decisions, and authoring conventions. |
 
 ## Recommended Reading Order
 
-1. Start with the [Vision](Vision.md) and [Story Brief](Narrative/Story%20Brief.md) for context.
+1. Start with the [Vision](Vision.md) and [Story and Campaign](Narrative/Story%20and%20Campaign.md) for context.
 2. Read the [Core Loop](Systems/Core%20Loop.md) for the player experience.
-3. Use the section overviews to define detailed systems, content, narrative, and presentation requirements.
-4. Read [Production](Production.md) before reducing the complete model into the reserved [MVP Scope](Production/MVP%20Scope.md).
+3. Resolve Combat, Dungeon, Hub, Progression, and their remaining child definitions.
+4. Define reusable Content and Presentation requirements.
+5. Complete the [Complexity Map](Production/Complexity%20Map.md) before reducing the game into [MVP Scope](Production/MVP%20Scope.md).

@@ -1,13 +1,13 @@
 ---
 status: draft
 lastReviewed: 2026-06-09
-summary: Rules that convert settlement needs into generated dungeon objectives and resolve their outcomes.
+summary: Rules that convert settlement needs into dungeon objectives and turn success, failure, or neglect into readable consequences.
 related:
   - ../Hub.md
   - ../Dungeon.md
-  - ../Dungeon/Level Generation.md
+  - ../Dungeon/Encounters.md
 ---
-# Requests and Dungeon Objectives
+# Requests and Consequences
 
 ## Purpose
 
@@ -17,12 +17,12 @@ A request starts as a local need inside a building, then becomes a dungeon objec
 
 Requests are the bridge between hub management and roguelike runs. They should explain why the player is going back into danger, what success looks like, and what changes when the player returns.
 
-The hub supports three request classes:
+The current model supports three candidate request classes:
 
 | Class | Time Scale | Purpose |
 | --- | --- | --- |
-| Daily Requests | One in-game day or one expedition cycle. | Short-term needs, small rewards, pressure relief, resource targeting. |
-| Weekly Requests | Several in-game days. | Larger settlement projects, NPC needs, stabilizing systems, medium upgrades. |
+| Immediate Requests | One expedition cycle or crisis window. | Short-term needs, pressure relief, resource targeting. |
+| Ongoing Requests | Several expedition cycles. | Settlement projects, NPC needs, stabilizing systems, medium upgrades. |
 | Era Upgrade Requests or Conditions | Long-term progression gates. | Major civilization advancement, boss gates, new dungeon rules, new hub capabilities. |
 
 ## Example Flow
@@ -58,11 +58,11 @@ The important distinction is `Secured` versus `Delivered`. Finding a medicine cr
 
 | Request Class | Active Limit | Failure Rule | Typical Reward |
 | --- | --- | --- | --- |
-| Daily | Up to 3 visible, 1 tracked for dungeon influence. | Expires or worsens at night. | Supplies, health, morale, small relationship or building progress. |
-| Weekly | Up to 2 active. | Loses progress, adds event pressure, or extends completion time. | Building level progress, survivor stability, larger resource bundles. |
-| Era Upgrade | Any number visible, but only 1 pinned as the current civilization goal. | Does not expire. Missing conditions remain blocked until solved. | New era level, new dungeon strata, new building functions, story progression. |
+| Immediate | Limited visible set; one primary tracked objective. | Expires, changes, or worsens after a defined pressure window. | Supplies, health, morale, relationship, or building relief. |
+| Ongoing | Small active set. | Loses progress or adds pressure gradually. | Building progress, survivor stability, or larger resource recovery. |
+| Era Upgrade | Visible as long-term conditions; one can be pinned as the current civilization goal. | Does not expire. | New era capability, dungeon opportunities, building functions, and story progression. |
 
-Daily requests should make each day feel different. Weekly requests should create medium-term planning. Era upgrade requests should define the player's current strategic direction.
+Exact limits and calendar duration remain unresolved. Immediate requests should vary short-term priorities, ongoing requests should support planning, and era conditions should define strategic direction.
 
 ## Request Types
 
@@ -125,7 +125,7 @@ Each generated level should have tags like:
 
 | Tag Type | Examples | Use |
 | --- | --- | --- |
-| Era Band | Stone, Settlement, Metalworking, Mechanization, Electricity. | Controls materials, enemies, hazards, and available knowledge. |
+| Era Band | Survival, Settlement, Metalworking, Mechanization, Electricity, Connectivity. | Controls materials, enemies, hazards, and available knowledge. |
 | Theme | Cavern, Ruin, Utility, Organic, Workshop, Archive, Transit. | Controls dominant resource families and visual identity. |
 | Threat | Low, Medium, High, Crisis. | Controls enemy density, hazard severity, and objective risk. |
 | Resource Bias | Food, Medicine, Scrap, Copper, Fuel, Data. | Increases specific drops and objective compatibility. |
@@ -173,10 +173,53 @@ Main objective completed or failed
 -> Hub requests updated
 ```
 
-This result feeds directly into the hub's daily, weekly, and era request states.
+This result feeds directly into the hub's immediate, ongoing, and era request states.
 
 ## Multiple Requests
 
 The number of tracked and secondary requests remains unresolved. The expedition interface must make the primary purpose of a run clear even when several compatible opportunities exist.
 
 For example, a clinic fungus request and workbench copper request can both target early floors, but the expedition board should ask the player to choose the main run goal. The chosen goal influences dungeon placement so the run feels intentional.
+
+## Events
+
+Events are temporary pressures caused by settlement state, survivors, campaign milestones, or player outcomes. They must create a response rather than random punishment.
+
+Each event defines:
+
+| Field | Meaning |
+| --- | --- |
+| Trigger | State that starts the event. |
+| Location | Where it becomes visible and actionable. |
+| Pressure | How and when it worsens. |
+| Choices | Available player responses. |
+| Cost | Resources, assignment changes, risk, or opportunity cost. |
+| Consequence | Result of success, failure, or neglect. |
+| Follow-up | Request, dialog, upgrade, or future event created. |
+
+## Consequence Rules
+
+- One failure does not casually destroy a building, kill a critical survivor, or permanently lock an era.
+- Delivered progress remains safe unless a later explicit event targets it.
+- Secured but unextracted value is normally lost.
+- Short-term requests can expire or worsen.
+- Long-term projects degrade slowly rather than disappearing.
+- Era conditions do not expire.
+- Named survivors receive warning states before death or departure.
+- Critical systems fail softly before complete shutdown.
+
+Use small consequences often and major consequences rarely. Reduced healing, slower crafting, lower morale, temporary survivor unavailability, or an urgent objective are preferred early responses. Permanent death, closed story routes, or direct hub attacks require explicit narrative and system support.
+
+## Survivor Pressure States
+
+Temporary states can include injured, exhausted, afraid, sick, and angry. They modify assignments or create requests while preserving the simple base role system. Their triggers, duration, recovery, and stacking limits remain unresolved.
+
+## Validation Criteria
+
+This system is ready for review when:
+
+- Every request has a clear source, target, placement rule, failure result, and hub payoff.
+- Request pressure uses tested expedition or campaign timing rather than arbitrary calendar chores.
+- Events create choices and recovery paths instead of unexplained punishment.
+- Consequences preserve extraction tension without producing unrecoverable failure spirals.
+- Objective generation remains compatible with valid dungeon generation.

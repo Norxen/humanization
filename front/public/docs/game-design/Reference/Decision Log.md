@@ -19,6 +19,8 @@ related:
 | DEC-006 | 2026-06-09 | Use real-time top-down or isometric combat with independent movement and free aim. | Mechanical weapon skill and readable spatial engineering must coexist. | Combat, encounters, UI, enemies |
 | DEC-007 | 2026-06-09 | Combine responsive weapons with scanning, tools, gadgets, and environmental control. | Engineering should create decisive advantages without replacing action combat. | Combat, progression, items |
 | DEC-008 | 2026-06-09 | Use capability-gated salvage across six first-campaign eras. | Discovery can precede reliable use while civilization rebuilding remains mechanically necessary. | Progression, combat, hub, content |
+| DEC-009 | 2026-06-09 | Keep authoritative rules in compact owner documents and create child pages only for distinct substantial topics. | The 55-page tree duplicated rules and treated unresolved questions as independent design branches. | Entire documentation tree |
+| DEC-010 | 2026-06-09 | Treat calendar-based request timing as unresolved until expedition and campaign pacing are tested. | Calendar labels were creating commitments before the game time model was defined. | Hub, dungeon, campaign |
 
 ## Entry Rule
 

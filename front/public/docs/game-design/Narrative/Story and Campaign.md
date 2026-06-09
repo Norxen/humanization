@@ -1,13 +1,14 @@
 ---
 status: draft
 lastReviewed: 2026-06-09
-summary: Narrative premise, world, protagonist, first campaign arc, and central themes.
+summary: Authoritative narrative premise, world facts, characters, first campaign structure, themes, and delivery requirements.
 related:
   - ../Vision.md
   - ../Systems/Core Loop.md
-  - Campaign Structure.md
+  - ../Systems/Progression/Era Progression.md
+  - ../Systems/Hub.md
 ---
-# Story Brief
+# Story and Campaign
 
 ## Purpose
 
@@ -237,3 +238,60 @@ The world begins in darkness, silence, and defeat. Every rescued survivor, resto
 ## One-Sentence Pitch
 
 A roguelike civilization-rebuilder where an engineer wakes 5000 years after humanity's defeat and descends into an ancient underground archive to rescue survivors, recover lost knowledge, rebuild society era by era, and prepare The Return Protocol before extinction becomes permanent.
+
+## Canonical World Definition
+
+The current known facts are:
+
+- Humanity was defeated.
+- The Cradle was created as a civilization reconstruction engine.
+- The protagonist wakes roughly five thousand years later.
+- The archive preserves people, knowledge, biology, infrastructure, and cultural memory.
+
+The pre-collapse timeline, creators of The Cradle, nature of humanity's defeat, intervening history, archive reliability, and Return Protocol rules remain unresolved. Future world facts must be labeled as public knowledge, discoverable truth, disputed account, or protected spoiler.
+
+## Character and Faction Requirements
+
+The required narrative roles are:
+
+- The engineer protagonist.
+- The Curator, a damaged preservation AI.
+- Survivors from preserved, trapped, adapted, or descended communities.
+- The enemy species that already defeated humanity.
+
+The protagonist's authored identity, Curator outcomes, first-campaign cast, survivor factions, enemy intelligence, and communication remain unresolved. Character definitions must name their gameplay dependency rather than exist only as lore.
+
+## Campaign Structure Requirements
+
+The first campaign follows the canonical sequence Survival, Settlement, Metalworking, Mechanization, Electricity, and Connectivity. It ends when the settlement sends a signal and receives human, enemy, and corrupted creator transmissions.
+
+The campaign still needs:
+
+- Phase boundaries tied to system changes rather than arbitrary duration.
+- Mandatory and optional objectives.
+- Era transition conditions and visible hub changes.
+- Reveal order for the Curator, enemy, and Return Protocol.
+- Failure recovery and persistence rules.
+- A dependency matrix connecting story beats to systems and content.
+
+## Narrative Delivery
+
+Story can be delivered through:
+
+- Contextual survivor dialog and hub scenes.
+- Archive logs, terminals, environmental evidence, and recovered memory.
+- Building changes and settlement routines.
+- Expedition objectives, signals, and enemy behavior.
+- Era-transition and campaign milestone sequences.
+
+Delivery should not interrupt play without a clear priority. Important information needs replay, journal, subtitle, localization, and accessibility support. Systemic events and authored scenes require conflict-resolution rules so critical state is not contradicted or hidden.
+
+## Narrative Validation
+
+The narrative is ready for review when:
+
+- Canonical facts and protected spoilers are separated.
+- Every principal character and campaign beat has a gameplay relationship.
+- Era transitions create both mechanical and narrative change.
+- Delivery channels have clear responsibilities and persistence rules.
+- The first campaign can be represented as a dependency map without requiring final content volume.

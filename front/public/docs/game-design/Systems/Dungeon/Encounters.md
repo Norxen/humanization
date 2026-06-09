@@ -5,7 +5,7 @@ summary: Planned rules for composing combat, hazard, resource, rescue, and decis
 related:
   - ../Dungeon.md
   - ../Combat.md
-  - ../../Content/Enemies.md
+  - ../../Content/Content Requirements.md
 ---
 # Encounters
 

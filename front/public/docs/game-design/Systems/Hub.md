@@ -1,330 +1,149 @@
 ---
 status: review
 lastReviewed: 2026-06-09
-summary: Settlement planning, locations, survivors, requests, upgrades, and the visible rebuilding of civilization.
+summary: Authoritative settlement model for walkable locations, upgrades, survivors, routine interaction, and visible civilization growth.
 related:
   - Core Loop.md
-  - Dungeon.md
-  - Hub/Building Purpose and Era Levels.md
+  - Progression.md
+  - Progression/Era Progression.md
+  - Hub/Requests and Consequences.md
+  - ../Narrative/Story and Campaign.md
 ---
 # Hub
 
 ## Purpose
 
-The hub is the strategic and emotional center of the game. It is where dungeon rewards become civilization progress, where survivors become part of the settlement, and where the next expedition gets its purpose.
+The hub turns extracted value into visible civilization. It gives each expedition a human reason, provides preparation and recovery, and shows the mechanical and emotional consequences of success and failure.
 
-The hub should not be treated as a static menu. It should work like a growing network of locations. Each location or building can offer a small interaction, a dialog, a function, an upgrade, a survivor assignment, or a new objective.
-
-The hub answers the question:
-
-> What do I do with what I brought back?
+The hub is walkable. Physical space provides orientation, atmosphere, visible construction, and contextual survivor placement. Focused overlays provide decisions without turning the settlement into a spreadsheet.
 
 ## Hub Fantasy
 
-The hub begins as a damaged shelter and slowly becomes a living settlement. Its growth should be visible, practical, and emotional. At first, the player may only have a broken capsule, a workbench, storage, and a damaged generator. Later, the same space can include a clinic, farm, forge, research station, housing, radio tower, and active NPCs.
+The player should feel that they are rebuilding a place rather than filling an upgrade menu:
 
-The player should feel that the hub is not only a place to spend resources. It is the visible proof that humanity is returning.
+- Buildings visibly change across eras.
+- Survivors occupy meaningful roles and react to settlement state.
+- Shortages, construction, power, and events appear in the environment.
+- Extracted resources create understandable new functions.
+- The next dungeon objective grows from an actual settlement need.
 
-## Generic Hub Location Model
+## Location Model
 
-Every hub location should follow the same general structure, even if each one has different content.
+Every location uses one shared schema:
 
-A location can show the player its current state, present one or more characters, offer local actions, expose upgrades, and generate needs. This keeps the hub scalable: a clinic, farm, workbench, generator room, archive terminal, and radio tower can all use the same interaction logic while still feeling different.
+| Field | Responsibility |
+| --- | --- |
+| Identity | Stable ID, display name, category, and permanent purpose. |
+| Era State | Current era capability, construction progress, and visual form. |
+| Status | Most important output, shortage, event, or blocked state. |
+| Functions | Actions such as heal, craft, assign, decode, repair, or launch. |
+| Upgrade | Next improvement, requirements, partial progress, and payoff. |
+| Survivors | Assigned roles and current availability. |
+| Requests | Needs that can influence the next expedition. |
+| Events | Local pressure, consequences, reactions, and discoveries. |
 
-Each location should also have an era identity. The building's core purpose remains stable, but its form and output improve as civilization advances. A food building may begin as a foraging station, become a farm, gain mechanical processing, use powered greenhouse systems, and eventually coordinate production through settlement networks. This gives the hub a clear long-term progression path without changing the player's basic understanding of what the building is for.
+A location keeps the same purpose across eras. A clinic remains about health while its reliability, scale, dependencies, and available actions evolve.
 
-The generic model is:
+## Interaction Model
+
+Locations use three layers:
+
+| Layer | Purpose |
+| --- | --- |
+| Physical Space | Walking, environmental storytelling, construction, NPC placement, and visible problems. |
+| Proximity Information | A concise status or interaction prompt. |
+| Interaction Overlay | Main function, upgrade, people, requests, and relevant event decisions. |
+
+The standard flow is:
 
 ```text
-Enter location
--> Read current state
--> Talk or inspect
--> Choose local action
--> Spend resources, assign survivor, or resolve event
--> Update hub state
--> Create or complete objective
+Approach location
+-> Read status or prompt
+-> Open focused overlay
+-> See main function first
+-> Review current problem or next upgrade
+-> Take one meaningful action
+-> Hub state updates
+-> Return to the walkable space
 ```
 
-For example, the clinic may offer healing, medical dialog, disease events, medicine crafting, and a request for medicinal fungus. The forge may offer weapon upgrades, material processing, blacksmith dialog, and a request for copper. The radio tower may offer signal scanning, story messages, technician dialog, and a request for power or antenna parts.
+Each location should normally expose one primary action and no more than two secondary actions. Use stable groups such as `Use`, `Upgrade`, `People`, and `Requests` when additional depth is justified.
 
-## Child Design Documents
+Walking must not become repetitive travel. Discovered shortcuts, pinned requests, and an expedition-exit summary should support fast preparation.
 
-The hub loop has several child documents. Each one defines a specific part of how hub locations, buildings, NPCs, upgrades, and requests should work.
+## Upgrade Requirements
 
-| File | Covers |
+Building upgrades can require:
+
+- Materials.
+- Retained knowledge or blueprints.
+- A survivor role.
+- Settlement health, morale, food, population, or power.
+- Another building.
+- A dungeon or story milestone.
+
+Requirements have four readable states: met, missing but known, unknown, and blocked. Players should understand what is missing, how it can be pursued, and what the upgrade changes.
+
+Materials may be loaded gradually into a building and remain protected from ordinary expedition loss. Knowledge, survivors, power, and milestones are conditions rather than consumable materials.
+
+Partial construction should produce visible progress and may grant small benefits, but the previous universal percentage tiers are a design proposal rather than a fixed rule. Each building needs only as many construction stages as create meaningful feedback.
+
+## Era Evolution
+
+The canonical building capability sequence is:
+
+| Era | Building Character |
 | --- | --- |
-| [Hub Location Template](Hub/Hub%20Location%20Template.md) | Shared schema for every hub building or location. |
-| [Building Purpose and Era Levels](Hub/Building%20Purpose%20and%20Era%20Levels.md) | How each building evolves across the six first-campaign eras. |
-| [Upgrade Requirements](Hub/Upgrade%20Requirements.md) | Resources, knowledge, survivors, milestones, and dependencies needed for upgrades. |
-| [Location Interaction Rules](Hub/Location%20Interaction%20Rules.md) | How status, functions, dialog, upgrades, assignments, and events appear in a location. |
-| [NPC and Dialog Behavior](Hub/NPC%20and%20Dialog%20Behavior.md) | Contextual dialog rules for survivors and story NPCs. |
-| [Requests and Dungeon Objectives](Hub/Requests%20and%20Dungeon%20Objectives.md) | How hub needs become dungeon objectives and resolve back into hub progress. |
-| [Hub Events and Consequences](Hub/Hub%20Events%20and%20Consequences.md) | Small settlement events caused by needs, failures, milestones, or NPC conflicts. |
+| Survival | Improvised, manual, fragile, and local. |
+| Settlement | Organized, staffed, and community-supported. |
+| Metalworking | Durable, precise, specialized, and tool-supported. |
+| Mechanization | Machine-assisted, repeatable, and productive. |
+| Electricity | Powered, faster, sensor-enabled, and grid-dependent. |
+| Connectivity | Networked, coordinated, data-driven, and remotely influential. |
 
-## Location Interaction Types
+Buildings advance independently, allowing a mixed-era settlement. Each era upgrade should add a visible capability, improve an important output, or introduce a meaningful dependency. Purely cosmetic changes do not need systemic era levels.
 
-Each building does not need many systems at once. A location can start simple and gain more interactions as the hub develops.
+## Survivors and Dialog
 
-Common interaction types:
+Survivor assignment starts as a clear capability rule: the needed role is present or absent. Temporary states such as injured, exhausted, afraid, sick, or angry can modify availability later without requiring a full population simulation.
 
-| Interaction | Meaning |
-| --- | --- |
-| Status | Shows what the location is doing, missing, producing, or blocking. |
-| Dialog | Lets the player talk to assigned survivors or story NPCs. |
-| Function | Performs the building's main action, such as healing, crafting, research, storage, or scouting. |
-| Upgrade | Improves the building by spending resources and knowledge. |
-| Assignment | Lets the player assign a survivor to change output or unlock options. |
-| Request | Creates a dungeon objective based on a local need. |
-| Event | Resolves a problem, conflict, discovery, or consequence. |
+Dialog reads current hub state and serves one of four purposes:
 
-This structure lets every hub location feel alive without requiring every building to become a complex minigame.
+- Teach a system.
+- Create or clarify a request.
+- React to success, failure, rescue, construction, or loss.
+- Present a decision affecting resources, assignments, morale, or story.
 
-## Hub Categories
+Priority is critical event, milestone reaction, active request, first-use explanation, relationship state, then ambient line. Important information should not be hidden behind random flavor.
 
-Hub locations should be grouped by what kind of civilization need they support.
-
-| Category | Purpose | Example Locations |
-| --- | --- | --- |
-| Survival | Keeps people alive and stable. | Clinic, kitchen, water purifier, farm, housing. |
-| Production | Turns materials into tools and infrastructure. | Workbench, forge, material processor, mechanical workshop. |
-| Exploration | Helps the player plan and survive dungeon runs. | Map room, elevator station, extraction beacon, expedition terminal. |
-| Combat | Improves defense and expedition combat readiness. | Armory, training area, gadget lab, defense post. |
-| Knowledge | Converts discoveries into technology and story progress. | Archive terminal, research lab, school, blueprint station. |
-| Power | Enables advanced systems and later hub stages. | Generator room, battery bank, power grid, machine room. |
-| Connectivity | Opens communication beyond the settlement. | Radio tower, signal station, scanner array, communication terminal. |
-
-Categories are mainly for clarity. The player should not feel like they are managing abstract tabs. They should feel like they are visiting useful places in a settlement.
-
-## Hub Flow
-
-A normal hub visit starts when the player returns from a run. The first step is resolution: extracted resources are stored, rescued survivors are registered, knowledge is decoded, and any active objectives are updated.
-
-After that, the player moves through hub locations to decide what matters next. They may visit the clinic to heal, the workbench to craft, the archive to decode a memory core, the farm to check food, or the generator room to see what is missing for power restoration.
-
-The visit should end with preparation. By the time the player leaves the hub, they should have a clear reason for the next run.
+## Hub Cycle
 
 ```text
-Return from dungeon
--> Resolve rewards
--> Visit hub locations
--> Talk, inspect, craft, heal, assign, upgrade, or research
--> Identify the next need
--> Prepare supplies
--> Choose next run objective
--> Enter dungeon again
+Return from expedition
+-> Resolve deliveries, injuries, requests, and events
+-> Observe visible settlement changes
+-> Recover, craft, assign, build, and choose priorities
+-> Select a primary expedition objective
+-> Prepare loadout
+-> Leave through the physical expedition exit
 ```
 
-## PlantUML Flow
+The exact calendar model is unresolved. Calendar-based request terminology should not create mandatory chores until time pressure, expiration, and campaign pacing are tested together.
 
-The diagram below shows the hub as a generic interaction network. It does not assume a specific building. Any location can plug into the same workflow.
+## Boundaries
 
-Each building also has an **era level**. A clinic, farm, forge, archive terminal, or generator room should keep the same broad purpose across the whole game, but its function improves as civilization advances. For example, a healing location may begin as a campfire triage spot, become a staffed clinic, gain machine-assisted treatment, become powered in the Electricity Era, and coordinate diagnosis through Connectivity.
+- [Requests and Consequences](Hub/Requests%20and%20Consequences.md) owns request states, objective conversion, event pressure, and failure escalation.
+- [Progression](Progression.md) owns resource, knowledge, equipment, and player-growth rules.
+- [Era Progression](Progression/Era%20Progression.md) owns civilization-wide capability transitions.
+- [Story and Campaign](../Narrative/Story%20and%20Campaign.md) owns canonical characters, campaign beats, and authored narrative truth.
 
-This means every building has three important questions:
+## Validation Criteria
 
-- What is this building's purpose?
-- What can it do in the current era?
-- What does it need to upgrade into its next era form?
+The hub is ready for review when:
 
-```plantuml
-@startuml
-title Roguelike Civilization Rebuilder - Generic Hub Loop
-
-start
-
-partition "1. Return Resolution" {
-  :Return from dungeon or start hub phase;
-  :Store secured resources;
-  :Register rescued survivors;
-  :Decode recovered knowledge;
-  :Update active objectives;
-}
-
-partition "2. Choose Hub Location" {
-  :Open hub map or move through settlement;
-  :Select a location or building;
-  note right
-  Examples:
-  clinic, workbench, farm,
-  forge, generator room,
-  archive terminal, radio tower.
-  end note
-}
-
-partition "3. Building Identity and Era State" {
-  :Load building purpose;
-  note right
-  Purpose stays stable.
-
-  Examples:
-  Clinic = restore health.
-  Farm = produce food.
-  Forge = improve materials and gear.
-  Archive = convert knowledge.
-  Generator = provide power.
-  Radio Tower = connect outward.
-  end note
-
-  :Check current era level;
-  note right
-  Example era levels:
-  - Survival
-  - Settlement
-  - Metalworking
-  - Mechanization
-  - Electricity
-  - Connectivity
-  end note
-
-  :Show current building status;
-  note right
-  Status can show:
-  - era tier
-  - current function
-  - current output
-  - missing resources
-  - assigned survivors
-  - available upgrades
-  - unresolved events
-  end note
-}
-
-partition "4. Local Interaction" {
-  if (What does the player do?) then (talk)
-    :Talk to survivor or NPC;
-    :Reveal dialog, quest, conflict, or clue;
-  elseif (use function)
-    :Craft, heal, research, store, scout, scan, or train;
-  elseif (upgrade)
-    :Spend resources and knowledge;
-    :Improve building capability;
-  elseif (assign survivor)
-    :Choose survivor role;
-    :Change output or unlock option;
-  elseif (resolve event)
-    :Handle local problem or consequence;
-  endif
-}
-
-partition "5. Era Upgrade Check" {
-  if (Can upgrade building era?) then (yes)
-    :Show next era form and requirements;
-    note right
-    Upgrade requirements can include:
-    resources, blueprints,
-    specialists, power,
-    city milestone, or boss clear.
-    end note
-
-    if (Player upgrades now?) then (yes)
-      :Spend required resources and knowledge;
-      :Increase building era level;
-      :Unlock stronger function, new dialog, or new request;
-    else (not yet)
-      :Track missing upgrade requirements;
-      :Create hub task or dungeon objective;
-    endif
-  else (no)
-    :Keep building at current era level;
-  endif
-}
-
-partition "6. Hub State Update" {
-  :Apply result to settlement;
-  if (Need completed?) then (yes)
-    :Complete objective;
-    :Unlock reward, dialog, upgrade, or next step;
-  else (no)
-    :Keep need active;
-  endif
-
-  if (New need created?) then (yes)
-    :Create dungeon objective or hub task;
-  else (no)
-  endif
-}
-
-partition "7. Continue or Depart" {
-  if (Visit another location?) then (yes)
-    :Choose another hub location;
-    detach
-  else (prepare run)
-    :Craft supplies and choose equipment;
-    :Select next run objective;
-    :Leave hub for The Cradle;
-  endif
-}
-
-stop
-@enduml
-```
-
-## Survivors in the Hub
-
-Survivors are the main way the hub becomes personal. They should not only increase population. A survivor can unlock a building, improve a function, create a request, change dialog, or introduce a conflict.
-
-For example, a doctor assigned to the clinic may improve healing and unlock medicine crafting. A farmer assigned to the farm may improve food production and create seed recovery objectives. A technician assigned to the generator room may unlock electrical research but request parts from deeper floors.
-
-The important rule is that survivor assignment should create tradeoffs. A useful survivor may be able to work in several locations, but only one assignment should be active at a time.
-
-## City Needs
-
-City needs are the hub's pressure system. They make the settlement feel alive and generate practical reasons to enter the dungeon.
-
-Food, health, knowledge, power, morale, and security can all create objectives. If the clinic lacks medicine, the player has a reason to search organic rooms. If the forge lacks copper, the player has a reason to enter metal-rich floors. If the archive has an unreadable memory core, the player may need a specialist or a better research station.
-
-The earliest playable settlement should begin with a readable set of needs before additional simulation layers are introduced:
-
-| Need | Why It Matters |
-| --- | --- |
-| Population | Shows rescued humanity returning. |
-| Food | Creates basic survival pressure. |
-| Health | Supports recovery and expedition readiness. |
-| Knowledge | Unlocks technologies and story. |
-| Power | Drives the first major settlement milestone. |
-
-More needs can be added as their interactions and production cost are understood, but the initial set should stay readable.
-
-## Hub Growth
-
-The hub should grow in stages. Each stage changes both gameplay and mood.
-
-| Stage | Gameplay Meaning | Story Meaning |
-| --- | --- | --- |
-| Shelter | Basic crafting, storage, healing. | Humanity is barely alive. |
-| Settlement | Housing, farming, clinic, jobs. | People begin trusting each other. |
-| Industry | Forge, workshop, processing. | The community can create again. |
-| Electricity | Generator, batteries, powered machines. | Light returns. |
-| Connectivity | Radio tower, scanner, archive network. | The hub reaches beyond itself. |
-
-Growth should not only add new menus. It should change what the player sees, who they can talk to, what sounds are present, what lights are active, and what problems the settlement can now face.
-
-## Building Era Progression
-
-Buildings should not be replaced by unrelated systems every era. They should evolve.
-
-| Building Purpose | Survival / Settlement | Metalworking / Mechanization | Electricity / Connectivity |
-| --- | --- | --- | --- |
-| Healing | Triage corner, herbal table, staffed clinic. | Durable instruments, sterile surfaces, pump-assisted treatment. | Powered care, sensors, and networked diagnostics. |
-| Food | Foraging storage, seed bed, basic farm. | Durable tools, irrigation machinery, food processing. | Powered greenhouse systems and coordinated production data. |
-| Crafting | Workbench, hand tools, repair table. | Forge, machine workshop, precision and repeatable parts. | Powered tools, sensors, and networked fabrication planning. |
-| Materials | Stone storage, scrap sorting, charcoal furnace. | Refining, alloys, machine-assisted processing. | Powered processing and coordinated material logistics. |
-| Knowledge | Damaged terminal, manual archive, teaching space. | Durable records, instruments, mechanical data recovery. | Powered archives, shared analysis, and networked research. |
-| Power | Fire, hand crank, repaired mechanical generation. | Pumps, turbines, transmission machinery. | Stable grid, storage, sensing, and coordinated distribution. |
-| Communication | Signals, local records, simple transmitters. | Precision instruments and mechanical signal systems. | Radio, scanner arrays, and inter-settlement networks. |
-
-This approach keeps the hub readable. The player can understand that "the clinic heals people" from the beginning while still feeling it change meaningfully from manual survival to networked civilization.
-
-## Design Rules
-
-A hub location should usually provide one clear function, one visible state, and one reason to care. It can gain more interactions later, but its first version should be easy to understand.
-
-Buildings should create dungeon objectives, not just consume resources. If the player upgrades the generator, the next need might be batteries. If the radio tower comes online, the next need might be a signal amplifier or a rescue coordinate.
-
-NPC dialog should support gameplay and story at the same time. A survivor should not only give flavor text; they can reveal a need, explain a system, request a resource, react to progress, or create tension.
-
-The hub should always make the next run clearer. If the player finishes a hub visit without knowing why they are going back into The Cradle, the hub loop is not doing its job.
-
-## Clean Hub Loop Statement
-
-The player returns to the hub with secured rewards, visits settlement locations to talk, inspect, craft, heal, assign survivors, upgrade buildings, and resolve events, then leaves with a clear objective that sends them back into The Cradle.
+- A player can understand each location's purpose and most important state quickly.
+- Extracted value creates visible and functional change.
+- Upgrades connect materials, knowledge, people, and infrastructure without opaque blockers.
+- Survivors matter without requiring a deep workforce simulation.
+- Preparation can be completed quickly after locations are understood.
+- Requests create clear expedition motives and consequences create recovery decisions.

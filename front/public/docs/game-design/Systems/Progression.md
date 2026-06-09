@@ -1,153 +1,106 @@
 ---
 status: draft
 lastReviewed: 2026-06-09
-summary: Permanent advancement through resources, knowledge, eras, equipment, and settlement capability.
+summary: Authoritative progression model for resources, knowledge, equipment, inventory, player growth, and settlement capability.
 related:
   - Core Loop.md
-  - Hub/Building Purpose and Era Levels.md
+  - Hub.md
+  - Combat.md
   - Progression/Era Progression.md
+  - ../Content/Content Requirements.md
 ---
 # Progression
 
 ## Purpose
 
-Progression connects the dungeon and hub. The player should always know what they are trying to unlock and why it matters.
+Progression connects dungeon recovery to visible civilization growth. The player should know what they are trying to unlock, why it matters, and which combination of material, knowledge, people, and milestones makes it sustainable.
 
 ## Progression Layers
 
-| Layer | Examples |
+| Layer | Responsibility |
 | --- | --- |
-| Equipment | Better tools, weapons, armor, gadgets. |
-| Skills | Engineering abilities, combat techniques, survival perks. |
-| Hub Upgrades | Buildings, facilities, extraction systems. |
-| Knowledge | Recipes, blueprints, era unlocks. |
-| Relationships | NPC trust, quests, companion abilities. |
-| Dungeon Access | Shortcuts, deeper floors, new zones. |
+| Settlement | Buildings, services, production, power, and network capability. |
+| Era | Civilization-wide capability gates and campaign transitions. |
+| Equipment | Weapons, tools, armor, gadgets, repair, and modification. |
+| Engineer | Skills and techniques that reinforce preparation and adaptability. |
+| Knowledge | Recipes, blueprints, system understanding, and protected discoveries. |
+| Relationships | Survivor trust, assignments, conflicts, and personal opportunities. |
+| Dungeon Access | Routes, shortcuts, stabilized zones, and deeper opportunities. |
 
-## Resource System
+## Resources and Knowledge
 
-Resources support both crafting and civilization progress.
+Materials are normally consumed by crafting and construction. Knowledge is normally retained and unlocks recipes, systems, era conditions, or narrative understanding.
 
-| Type | Examples | Used For |
+| Family | Examples | Primary Use |
 | --- | --- | --- |
-| Basic Materials | Stone, wood, fiber, bone, clay | Early tools, shelter, basic crafting. |
-| Organic Materials | Herbs, seeds, fungus, resin, leather | Medicine, farming, food, utility items. |
-| Metal Materials | Copper, iron, tin, coal, scrap | Weapons, tools, machines, buildings. |
-| Energy Materials | Batteries, crystals, fuel cells, conductive minerals | Power systems, gadgets, electricity. |
-| Knowledge Materials | Blueprints, memory cores, research notes | Technologies and buildings. |
-| Human Resources | Survivors, specialists, workers | Hub growth, jobs, research speed. |
+| Basic | Stone, wood, fiber, clay, clean water. | Survival construction and common crafting. |
+| Organic | Herbs, seeds, fungus, resin, food. | Medicine, farming, utility, and settlement stability. |
+| Metal | Copper, iron, coal, refined scrap, wire. | Durable tools, weapons, machines, and buildings. |
+| Mechanical | Gears, pipes, springs, lubricant, pressure tanks. | Repeatable production and battlefield devices. |
+| Electrical | Batteries, fuel cells, insulators, circuit boards. | Power, sensors, advanced tools, and control. |
+| Network | Data cores, antennas, lenses, transmitters. | Connectivity, remote coordination, and diagnostics. |
+| Knowledge | Blueprints, memory cores, manuals, protocols. | Understanding, reproduction, upgrades, and story. |
 
-## Resource Rule
-
-Old resources should not become useless.
-
-Example: stone is used early for tools, then later for reinforced structures, furnace upgrades, insulation, defensive walls, and chemical processing.
-
-## Knowledge System
-
-Knowledge is separate from physical materials.
-
-Materials answer:
-
-> Can we build it?
-
-Knowledge answers:
-
-> Do we know how to build it?
-
-Important unlocks should often require both.
-
-Example: Basic Generator
-
-```text
-Requirements:
-- Copper x40
-- Iron x25
-- Magnetic Core x2
-- Mechanical Parts x10
-- Electricity Blueprint I
-- Engineer or technician assigned
-- Powered workshop built
-```
-
-## Era Progression
-
-Era progression should require:
-
-```text
-Resources + Knowledge + Milestone Objective
-```
-
-The player should not advance eras only by reaching a floor number. The hub must also be ready.
-
-The first-campaign sequence is:
-
-```text
-Survival
--> Settlement
--> Metalworking
--> Mechanization
--> Electricity
--> Connectivity
-```
-
-Exact transition requirements remain unresolved until campaign, hub, dungeon, and content dependencies are defined together.
+Old resources should remain useful in later construction, maintenance, conversion, or combined recipes. The final taxonomy still needs source-and-sink maps, storage targets, decoding rules, and balancing units.
 
 ## Capability-Gated Salvage
 
-Advanced technology can be discovered before the settlement reaches the era needed to support it.
+Advanced technology can appear before the settlement can sustain it. Discovery and ownership do not guarantee that an item can be understood, safely powered, repaired, supplied, reproduced, or upgraded.
 
-Recovery and ownership do not automatically grant full use. The current civilization capability determines whether an item can be:
-
-- Understood.
-- Safely powered.
-- Repaired.
-- Supplied with ammunition, fuel, or replacement parts.
-- Reproduced.
-- Modified and upgraded.
-
-An advanced relic may function briefly in an unreliable state, remain locked for research, or provide knowledge and components before it becomes a sustainable combat option. This preserves discovery without allowing random loot to bypass civilization progression.
+An unsupported relic may work unreliably, remain research-locked, or yield knowledge and components. This preserves discovery without allowing random loot to bypass civilization rebuilding.
 
 ## Engineer Progression
 
-The protagonist should feel like an engineer, not a generic fighter.
+Player growth must reinforce engineering, preparation, and adaptability rather than becoming a combat-only power curve.
 
-Engineer combat style:
+Potential progression can affect:
 
-- Preparation.
-- Gadgets.
-- Traps.
-- Positioning.
-- Improvised weapons.
-- Environmental control.
+- Tool functions and valid targets.
+- Deployment flexibility and preparation options.
+- Weapon handling and resource efficiency.
+- Scanner interpretation.
+- Recovery and failure mitigation.
+- Crafting, repair, and field improvisation.
 
-The universal combat actions and loadout live in [Player Actions](Combat/Player%20Actions.md). Era progression transforms what those actions can affect rather than replacing them with disconnected ability sets.
+Permanent attributes, run-specific upgrades, respecialization, power budgets, and reset boundaries remain unresolved. Universal combat verbs should remain recognizable across eras.
 
-The fantasy:
+## Equipment Progression
 
-> You are not the strongest thing in the dungeon. You are the smartest thing in the dungeon.
+The combat loadout establishes responsibilities, while item content supplies archetypes. Equipment can be crafted, recovered, repaired, modified, or unique. Era support determines maintenance, ammunition, energy, and reproduction.
+
+Progression should favor new interactions and combinations over replacing equipment with numerically superior copies.
 
 ## Inventory Pressure
 
-Inventory should create decisions without becoming annoying.
+Inventory creates tradeoffs between preparation, discovered value, objective cargo, and the ability to continue safely.
 
-| Category | Example |
+| Category | Responsibility |
 | --- | --- |
-| Backpack | General resources. |
+| Backpack | General recovered resources. |
 | Toolbelt | Active tools and gadgets. |
-| Protected Case | Blueprints and data cores. |
-| Rescue Slot | Survivors, capsules, escort objectives. |
-| Quick Slots | Healing, bombs, traps, consumables. |
+| Protected Case | Blueprints, data cores, and selected protected knowledge. |
+| Objective Capacity | Survivors, large cargo, or special mission objects. |
+| Quick Slots | Healing and immediate consumables. |
 
-Important item types should not all compete for the same space. A rescued survivor should not compete directly with basic rocks.
+Important item types should not all compete identically. A rescued survivor should not compete directly with basic material stacks. Slot, weight, volume, stacking, dropping, and controller behavior remain unresolved.
 
-## Progression Loop Summary
+## Progression Contract
+
+Important advancement usually requires:
 
 ```text
-Need identified
--> Run objective chosen
--> Resource or knowledge recovered
--> Hub upgrade built
--> New capability unlocked
--> Deeper need appears
+Materials + Knowledge + People or Infrastructure + Milestone
 ```
+
+The canonical era sequence and transition model live in [Era Progression](Progression/Era%20Progression.md). Era advancement is not granted only by reaching a dungeon depth.
+
+## Validation Criteria
+
+Progression is ready for review when:
+
+- Every reward has a visible use or conversion path.
+- Resource sources and sinks can be balanced by era.
+- Knowledge and materials have distinct persistence rules.
+- Player and equipment growth preserve combat skill and older capabilities.
+- Inventory pressure creates decisions without excessive sorting work.
+- Era requirements connect hub, dungeon, content, and campaign dependencies.

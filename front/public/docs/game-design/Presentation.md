@@ -1,20 +1,18 @@
 ---
 status: planned
-lastReviewed: 2026-06-07
-summary: Presentation quality targets spanning visual identity, interface, sound, and accessibility.
+lastReviewed: 2026-06-09
+summary: Ownership boundary for visual direction, interface, audio feedback, and accessibility.
 related:
-  - Production/Vertical Slice.md
-  - Vision/Player Fantasy and Experience Goals.md
+  - Presentation/Presentation Requirements.md
+  - Vision.md
+  - Production/Complexity Map.md
 ---
 # Presentation
 
 ## Purpose
 
-Presentation documentation defines how the game's systems, world, state, and emotional arc are communicated. It establishes direction and acceptance criteria without replacing production specifications.
+Presentation defines how the game's systems, world, state, and emotional arc are communicated. It establishes requirements and cost drivers without prematurely selecting an asset scope.
 
-## Areas
+## Definition
 
-- [Art Direction](Presentation/Art%20Direction.md)
-- [UI and UX](Presentation/UI%20and%20UX.md)
-- [Audio Direction](Presentation/Audio%20Direction.md)
-- [Accessibility](Presentation/Accessibility.md)
+[Presentation Requirements](Presentation/Presentation%20Requirements.md) owns visual readability, interaction, audio feedback, and accessibility requirements until those areas need independent production specifications.
