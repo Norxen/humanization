@@ -15,5 +15,6 @@ export interface FirebaseRuntimeConfig {
     enabled: boolean;
     host: string;
     port: number;
+    authPort?: number;
   };
 }

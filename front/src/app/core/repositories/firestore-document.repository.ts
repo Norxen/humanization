@@ -19,6 +19,15 @@ interface FirestoreDocumentData {
 export class FirestoreDocumentRepository extends DocumentRepository {
   private readonly firebase = inject(FirebaseService);
 
+  async list(): Promise<StoredDocument[]> {
+    const firestore = await this.firebase.firestore();
+    const { collection, getDocs } = await import('firebase/firestore');
+    const snapshot = await getDocs(collection(firestore, 'documents'));
+    return snapshot.docs
+      .map((document) => this.mapDocument(document.data() as FirestoreDocumentData))
+      .sort((left, right) => left.path.localeCompare(right.path));
+  }
+
   async load(path: string): Promise<StoredDocument> {
     const firestore = await this.firebase.firestore();
     const { doc, getDoc } = await import('firebase/firestore');
@@ -27,6 +36,51 @@ export class FirestoreDocumentRepository extends DocumentRepository {
       throw new Error(`Firestore document "${path}" does not exist.`);
     }
     return this.mapDocument(snapshot.data() as FirestoreDocumentData);
+  }
+
+  async create(path: string, body: string): Promise<StoredDocument> {
+    const firestore = await this.firebase.firestore();
+    const { doc, runTransaction, serverTimestamp } = await import(
+      'firebase/firestore'
+    );
+    const reference = doc(firestore, 'documents', this.documentId(path));
+
+    await runTransaction(firestore, async (transaction) => {
+      const snapshot = await transaction.get(reference);
+      if (snapshot.exists()) {
+        throw new Error(`A document already exists at "${path}".`);
+      }
+
+      transaction.set(reference, {
+        path,
+        body,
+        version: 1,
+        lastReviewed: this.today(),
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+    });
+
+    return this.load(path);
+  }
+
+  async delete(path: string): Promise<void> {
+    const firestore = await this.firebase.firestore();
+    const { collection, doc, getDocs, writeBatch } = await import(
+      'firebase/firestore'
+    );
+    const reference = doc(firestore, 'documents', this.documentId(path));
+    const revisions = await getDocs(collection(reference, 'revisions'));
+    if (revisions.size > 499) {
+      throw new Error('This document has too many revisions to delete safely.');
+    }
+
+    const batch = writeBatch(firestore);
+    for (const revision of revisions.docs) {
+      batch.delete(revision.ref);
+    }
+    batch.delete(reference);
+    await batch.commit();
   }
 
   async save(

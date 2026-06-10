@@ -12,7 +12,10 @@ export class FileTree {
   readonly nodes = input.required<FileTreeNode[]>();
   readonly activePageIndex = input.required<number>();
   readonly fileCount = input.required<number>();
+  readonly canManage = input(false);
   readonly pageSelected = output<number>();
+  readonly documentCreateRequested = output<string | null>();
+  readonly documentDeleteRequested = output<FileTreeNode>();
   readonly expandedFolders = signal(new Set<string>());
 
   toggleFolder(id: string): void {
@@ -35,5 +38,16 @@ export class FileTree {
     if (node.pageIndex !== undefined) {
       this.pageSelected.emit(node.pageIndex);
     }
+  }
+
+  requestDocumentCreation(node: FileTreeNode | null): void {
+    if (node) {
+      this.expandedFolders.update((folders) => new Set(folders).add(node.id));
+    }
+    this.documentCreateRequested.emit(node?.path ?? null);
+  }
+
+  requestDocumentDeletion(node: FileTreeNode): void {
+    this.documentDeleteRequested.emit(node);
   }
 }

@@ -4,7 +4,7 @@
   "scripts": {
     "ng": "ng",
     "docs:generate": "node scripts/generate-docs-manifest.mjs",
-    "prestart": "npm run docs:generate",
+    "prestart": "npm run docs:generate && npm run firebase:config:local",
     "start": "ng serve",
     "prebuild": "npm run docs:generate",
     "build": "ng build",
@@ -14,10 +14,11 @@
     "test:docs": "node --test scripts/generate-docs-manifest.test.mjs",
     "test:rules": "firebase emulators:exec --only firestore \"node --test scripts/firestore.rules.test.mjs\"",
     "test": "npm run test:docs && ng test",
-    "firebase:emulators": "firebase emulators:start --only firestore",
+    "firebase:emulators": "firebase emulators:start --only auth,firestore",
     "firebase:seed": "node scripts/seed-firestore.mjs",
     "firebase:seed:emulator": "npm run docs:generate && node scripts/seed-firestore.mjs --emulator --project=manuscript-local",
-    "firebase:config": "node scripts/write-firebase-config.mjs"
+    "firebase:config": "node scripts/write-firebase-config.mjs",
+    "firebase:config:local": "node scripts/write-firebase-config.mjs --emulator"
   },
   "private": true,
   "packageManager": "npm@11.6.2",

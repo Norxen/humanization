@@ -47,6 +47,9 @@ beforeEach(async () => {
       createdAt: new Date('2026-06-09T00:00:00Z'),
       updatedAt: new Date('2026-06-09T00:00:00Z')
     });
+    await setDoc(doc(context.firestore(), 'editors', 'editor-user'), {
+      email: 'editor@example.com'
+    });
   });
 });
 
@@ -59,7 +62,19 @@ test('allows public reads', async () => {
   await assertSucceeds(getDoc(doc(firestore, 'documents', 'Vision.md')));
 });
 
-test('denies client document creation and deletion', async () => {
+test('allows users to read only their own editor authorization', async () => {
+  const editor = environment.authenticatedContext('editor-user').firestore();
+  const ordinary = environment.authenticatedContext('ordinary-user').firestore();
+  await assertSucceeds(getDoc(doc(editor, 'editors', 'editor-user')));
+  await assertFails(getDoc(doc(ordinary, 'editors', 'editor-user')));
+  await assertFails(
+    setDoc(doc(editor, 'editors', 'another-user'), {
+      email: 'another@example.com'
+    })
+  );
+});
+
+test('denies unauthenticated writes', async () => {
   const firestore = environment.unauthenticatedContext().firestore();
   await assertFails(
     setDoc(doc(firestore, 'documents', 'New.md'), {
@@ -74,8 +89,64 @@ test('denies client document creation and deletion', async () => {
   await assertFails(deleteDoc(doc(firestore, 'documents', 'Vision.md')));
 });
 
+test('denies authenticated users who are not editors', async () => {
+  const firestore = environment.authenticatedContext('ordinary-user').firestore();
+  await assertFails(
+    setDoc(doc(firestore, 'documents', 'Unauthorized.md'), {
+      path: 'Unauthorized.md',
+      body: '# Unauthorized',
+      version: 1,
+      lastReviewed: '2026-06-09',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    })
+  );
+  await assertFails(deleteDoc(doc(firestore, 'documents', 'Vision.md')));
+});
+
+test('allows authenticated creation and document deletion', async () => {
+  const firestore = environment
+    .authenticatedContext('editor-user', { email: 'editor@example.com' })
+    .firestore();
+  await assertSucceeds(
+    setDoc(doc(firestore, 'documents', 'New.md'), {
+      path: 'New.md',
+      body: '# New',
+      version: 1,
+      lastReviewed: '2026-06-09',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    })
+  );
+  await assertSucceeds(deleteDoc(doc(firestore, 'documents', 'Vision.md')));
+});
+
+test('denies malformed document creation', async () => {
+  const firestore = environment.authenticatedContext('editor-user').firestore();
+  await assertFails(
+    setDoc(doc(firestore, 'documents', 'Invalid.md'), {
+      path: 'Invalid',
+      body: '# Invalid',
+      version: 1,
+      lastReviewed: '2026-06-09',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    })
+  );
+  await assertFails(
+    setDoc(doc(firestore, 'documents', 'WrongVersion.md'), {
+      path: 'WrongVersion.md',
+      body: '# Wrong Version',
+      version: 2,
+      lastReviewed: '2026-06-09',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    })
+  );
+});
+
 test('requires an immutable revision and a one-step version update', async () => {
-  const firestore = environment.unauthenticatedContext().firestore();
+  const firestore = environment.authenticatedContext('editor-user').firestore();
   const reference = doc(firestore, 'documents', 'Vision.md');
   await assertFails(
     updateDoc(reference, {
@@ -104,7 +175,7 @@ test('requires an immutable revision and a one-step version update', async () =>
 });
 
 test('denies immutable field changes and oversized bodies', async () => {
-  const firestore = environment.unauthenticatedContext().firestore();
+  const firestore = environment.authenticatedContext('editor-user').firestore();
   const reference = doc(firestore, 'documents', 'Vision.md');
 
   const pathBatch = writeBatch(firestore);
@@ -142,7 +213,7 @@ test('denies immutable field changes and oversized bodies', async () => {
 });
 
 test('revision documents are immutable', async () => {
-  const firestore = environment.unauthenticatedContext().firestore();
+  const firestore = environment.authenticatedContext('editor-user').firestore();
   await environment.withSecurityRulesDisabled(async (context) => {
     await setDoc(doc(context.firestore(), 'documents', 'Vision.md', 'revisions', '1'), {
       path: 'Vision.md',
@@ -157,4 +228,22 @@ test('revision documents are immutable', async () => {
   await assertFails(updateDoc(revision, { body: 'Changed' }));
   await assertFails(deleteDoc(revision));
   assert.equal((await getDoc(revision)).data().body, '# Vision\n\nOriginal.');
+});
+
+test('allows revision deletion only with its parent document', async () => {
+  const firestore = environment.authenticatedContext('editor-user').firestore();
+  await environment.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), 'documents', 'Vision.md', 'revisions', '1'), {
+      path: 'Vision.md',
+      body: '# Vision\n\nOriginal.',
+      version: 1,
+      lastReviewed: '2026-06-09',
+      createdAt: new Date('2026-06-09T00:00:00Z')
+    });
+  });
+
+  const batch = writeBatch(firestore);
+  batch.delete(doc(firestore, 'documents', 'Vision.md', 'revisions', '1'));
+  batch.delete(doc(firestore, 'documents', 'Vision.md'));
+  await assertSucceeds(batch.commit());
 });

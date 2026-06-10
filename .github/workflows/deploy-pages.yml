@@ -39,7 +39,7 @@ jobs:
       - name: Configure Firebase runtime
         working-directory: front
         env:
-          FIREBASE_API_KEY: ${{ vars.FIREBASE_API_KEY }}
+          FIREBASE_API_KEY: ${{ secrets.SECRET_API_KEY_FIREBASE }}
           FIREBASE_AUTH_DOMAIN: ${{ vars.FIREBASE_AUTH_DOMAIN }}
           FIREBASE_PROJECT_ID: ${{ vars.FIREBASE_PROJECT_ID }}
           FIREBASE_STORAGE_BUCKET: ${{ vars.FIREBASE_STORAGE_BUCKET }}

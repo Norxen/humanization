@@ -1,0 +1,20 @@
+{
+  "firebase": {
+    "apiKey": "",
+    "authDomain": "",
+    "projectId": "",
+    "storageBucket": "",
+    "messagingSenderId": "",
+    "appId": ""
+  },
+  "appCheck": {
+    "siteKey": "",
+    "enabled": false
+  },
+  "emulator": {
+    "enabled": false,
+    "host": "127.0.0.1",
+    "port": 8080,
+    "authPort": 9099
+  }
+}

@@ -14,8 +14,19 @@
   </div>
 
   <div class="meta">
-    <span>Markdown workspace</span>
-    <kbd>Local</kbd>
+    @if (userEmail(); as email) {
+      <span class="user-email" [title]="email">{{ email }}</span>
+      @if (canChangePassword()) {
+        <button class="auth-button" type="button" (click)="passwordChange.emit()">
+          Password
+        </button>
+      }
+      <button class="auth-button" type="button" (click)="logout.emit()">Logout</button>
+    } @else {
+      <button class="auth-button" type="button" [disabled]="!authReady()" (click)="login.emit()">
+        Login
+      </button>
+    }
     <button
       class="theme-button"
       type="button"

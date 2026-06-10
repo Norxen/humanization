@@ -1,6 +1,18 @@
 <div class="heading">
   <span>Files</span>
-  <button type="button" aria-label="More file options">...</button>
+  @if (canManage()) {
+    <button
+      class="add-root"
+      type="button"
+      aria-label="Create root document"
+      title="Create root document"
+      (click)="requestDocumentCreation(null)"
+    >
+      <svg viewBox="0 0 20 20" aria-hidden="true">
+        <path d="M10 4v12M4 10h12" />
+      </svg>
+    </button>
+  }
 </div>
 
 <nav class="file-tree" aria-label="Markdown files">
@@ -17,28 +29,51 @@
 
 <ng-template #tree let-items let-depth="depth">
   @for (node of items; track node.id) {
-    <button
+    <div
       class="tree-row"
-      type="button"
       [class.active]="node.pageIndex === activePageIndex()"
       [class.folder]="node.type === 'folder'"
       [style.padding-left.px]="9 + depth * 20"
-      (click)="selectNode(node)"
     >
-      @if (node.type === 'folder') {
-        <span
-          class="chevron"
-          [class.expanded]="isExpanded(node.id)"
-          [class.empty]="!node.children?.length"
-        >&gt;</span>
-        <span class="folder-icon"></span>
-      } @else if (node.type === 'markdown') {
-        <span class="file-icon">M</span>
-      } @else {
-        <span class="config-icon">&#123;&#125;</span>
+      <button class="node-select" type="button" (click)="selectNode(node)">
+        @if (node.type === 'folder') {
+          <span
+            class="chevron"
+            [class.expanded]="isExpanded(node.id)"
+          >&gt;</span>
+          <span class="folder-icon"></span>
+        } @else {
+          <span class="file-icon">M</span>
+        }
+        <span class="name">{{ node.displayName }}</span>
+      </button>
+      @if (canManage()) {
+      <div class="row-actions">
+        <button
+          class="tree-action add-child"
+          type="button"
+          [attr.aria-label]="'Create document inside ' + node.displayName"
+          [title]="'Create document inside ' + node.displayName"
+          (click)="requestDocumentCreation(node)"
+        >
+          <svg viewBox="0 0 20 20" aria-hidden="true">
+            <path d="M10 4v12M4 10h12" />
+          </svg>
+        </button>
+        <button
+          class="tree-action delete-document"
+          type="button"
+          [attr.aria-label]="'Delete ' + node.displayName"
+          [title]="'Delete ' + node.displayName"
+          (click)="requestDocumentDeletion(node)"
+        >
+          <svg viewBox="0 0 20 20" aria-hidden="true">
+            <path d="M5.5 6.5h9M8 6.5V5h4v1.5M7 8.5v6M10 8.5v6M13 8.5v6M6.5 6.5l.5 9h6l.5-9" />
+          </svg>
+        </button>
+      </div>
       }
-      <span class="name">{{ node.displayName }}</span>
-    </button>
+    </div>
 
     @if (node.children && isExpanded(node.id)) {
       <div class="branch" [style.margin-left.px]="20 + depth * 20">

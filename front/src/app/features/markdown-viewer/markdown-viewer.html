@@ -7,7 +7,9 @@
   </div>
   <div class="meta">
     <span>{{ document().readingTime }}</span><i></i><span>Markdown</span>
-    <button class="edit-button" type="button" (click)="edit.emit()">Edit</button>
+    @if (canEdit()) {
+      <button class="edit-button" type="button" (click)="edit.emit()">Edit</button>
+    }
   </div>
 </div>
 

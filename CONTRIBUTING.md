@@ -55,6 +55,6 @@ Cross-system unresolved questions belong in `Reference/Open Questions.md`. Accep
 
 ## Application Changes
 
-The Angular app is in `front/src`. Preserve static GitHub Pages hosting, Firestore runtime loading, local draft recovery, version-conflict protection, and App Check support. Test user-visible behavior in `front/src/app/app.spec.ts`.
+The Angular app is in `front/src`. Preserve static GitHub Pages hosting, public document reads, Firebase-authenticated writes, Firestore runtime loading, local draft recovery, version-conflict protection, and App Check support. Test user-visible behavior in `front/src/app/app.spec.ts`.
 
-Document creation, deletion, rename, move, and metadata editing are not supported by the runtime editor. Those changes still require repository updates, navigation validation, and a Firestore seed or future migration tool.
+Runtime page creation is supported from any tree entry. A new child uses the selected page name as its directory, and nodes automatically render as folders while they have children. Leaf pages can be deleted after confirmation; parents must have their children removed first. Rename, move, and metadata editing are not yet supported.

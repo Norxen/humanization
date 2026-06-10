@@ -39,6 +39,7 @@ export class MarkdownViewer implements OnDestroy {
   readonly document = input.required<LoadedDocument>();
   readonly previousPage = input<DocumentDescriptor>();
   readonly nextPage = input<DocumentDescriptor>();
+  readonly canEdit = input(false);
   readonly previous = output<void>();
   readonly next = output<void>();
   readonly documentSelected = output<string>();

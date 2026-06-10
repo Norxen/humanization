@@ -2,12 +2,46 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    function canWrite() {
+      return request.auth != null
+        && exists(
+          /databases/$(database)/documents/editors/$(request.auth.uid)
+        );
+    }
+
     function validDate(value) {
       return value is string
         && value.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
     }
 
+    match /editors/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if false;
+    }
+
     match /documents/{documentId} {
+      function validDocumentCreate() {
+        return request.resource.data.keys().hasOnly([
+            'path',
+            'body',
+            'version',
+            'lastReviewed',
+            'createdAt',
+            'updatedAt'
+          ])
+          && request.resource.data.path is string
+          && request.resource.data.path.size() > 3
+          && request.resource.data.path.size() <= 500
+          && request.resource.data.path.matches('^.+\\.md$')
+          && request.resource.data.body is string
+          && request.resource.data.body.size() > 0
+          && request.resource.data.body.size() <= 512000
+          && request.resource.data.version == 1
+          && validDate(request.resource.data.lastReviewed)
+          && request.resource.data.createdAt == request.time
+          && request.resource.data.updatedAt == request.time;
+      }
+
       function validDocumentUpdate() {
         return request.resource.data.diff(resource.data).affectedKeys()
             .hasOnly(['body', 'version', 'lastReviewed', 'updatedAt'])
@@ -25,13 +59,18 @@ service cloud.firestore {
       }
 
       allow read: if true;
-      allow create, delete: if false;
-      allow update: if validDocumentUpdate();
+      allow create: if canWrite() && validDocumentCreate();
+      allow delete: if canWrite();
+      allow update: if canWrite() && validDocumentUpdate();
 
       match /revisions/{revisionId} {
         allow read: if true;
-        allow update, delete: if false;
-        allow create: if request.resource.data.keys().hasOnly([
+        allow update: if false;
+        allow delete: if canWrite() && !existsAfter(
+          /databases/$(database)/documents/documents/$(documentId)
+        );
+        allow create: if canWrite()
+          && request.resource.data.keys().hasOnly([
             'path',
             'body',
             'version',

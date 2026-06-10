@@ -2,8 +2,10 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import {
   DocumentDescriptor,
   DocumentationManifest,
-  LoadedDocument
+  LoadedDocument,
+  StoredDocument
 } from '../models/document-page.model';
+import { FileTreeNode } from '../models/file-tree-node.model';
 import { MarkdownRendererService } from './markdown-renderer.service';
 import { DOCUMENT_REPOSITORY } from '../repositories/document.repository';
 import { AppUrlService } from './app-url.service';
@@ -33,7 +35,9 @@ export class DocumentationStore {
         throw new Error(`Manifest request failed with ${response.status}.`);
       }
 
-      const manifest = (await response.json()) as DocumentationManifest;
+      const staticManifest = (await response.json()) as DocumentationManifest;
+      const documents = await this.repository.list();
+      const manifest = this.buildRuntimeManifest(staticManifest, documents);
       this.manifest.set(manifest);
       const entryIndex = manifest.pages.findIndex(
         (page) => page.path.toLowerCase() === 'index.md'
@@ -127,6 +131,191 @@ export class DocumentationStore {
     };
     this.activeDocument.set(loaded);
     return loaded;
+  }
+
+  async createDocument(parentPath: string | null, requestedName: string): Promise<void> {
+    const name = this.normalizeDocumentName(requestedName);
+    const parentDirectory = parentPath?.replace(/\.md$/i, '') ?? '';
+    const path = parentDirectory ? `${parentDirectory}/${name}.md` : `${name}.md`;
+    if (this.pages().some((page) => page.path.toLowerCase() === path.toLowerCase())) {
+      throw new Error(`"${path}" already exists.`);
+    }
+
+    const stored = await this.repository.create(path, `# ${name}\n\n`);
+    const current = this.manifest();
+    if (!current) {
+      throw new Error('Documentation navigation is not initialized.');
+    }
+
+    const manifest = this.buildRuntimeManifest(current, [
+      ...this.pages().map((page) => this.descriptorAsStored(page)),
+      stored
+    ]);
+    this.manifest.set(manifest);
+    await this.selectPath(path);
+  }
+
+  async deleteDocument(path: string): Promise<void> {
+    const current = this.manifest();
+    if (!current) {
+      throw new Error('Documentation navigation is not initialized.');
+    }
+    const descriptor = this.pages().find((page) => page.path === path);
+    if (!descriptor) {
+      throw new Error(`"${path}" does not exist.`);
+    }
+
+    const directory = path.replace(/\.md$/i, '');
+    const hasChildren = this.pages().some((page) =>
+      page.path.startsWith(`${directory}/`)
+    );
+    if (hasChildren) {
+      throw new Error('Delete this page\'s children before deleting the parent page.');
+    }
+
+    await this.repository.delete(path);
+    const remainingDocuments = (await this.repository.list()).filter(
+      (document) => document.path !== path
+    );
+    const nextManifest = this.buildRuntimeManifest(current, remainingDocuments);
+    const deletedIndex = descriptor.pageIndex;
+    this.manifest.set(nextManifest);
+
+    if (!nextManifest.pages.length) {
+      this.activeDocument.set(null);
+      this.activePageIndex.set(0);
+      return;
+    }
+
+    const nextIndex = Math.min(deletedIndex, nextManifest.pages.length - 1);
+    await this.selectPage(nextIndex);
+  }
+
+  private buildRuntimeManifest(
+    staticManifest: DocumentationManifest,
+    documents: StoredDocument[]
+  ): DocumentationManifest {
+    const staticByPath = new Map(
+      staticManifest.pages.map((page) => [page.path.toLowerCase(), page])
+    );
+    const staticOrder = new Map(
+      staticManifest.pages.map((page, index) => [page.path.toLowerCase(), index])
+    );
+    const descriptors = documents.map((document) => {
+      const existing = staticByPath.get(document.path.toLowerCase());
+      const displayName = this.fileName(document.path);
+      return {
+        ...(existing ?? {
+          id: document.path,
+          name: `${displayName}.md`,
+          displayName,
+          displayPath: document.path.replace(/\.md$/i, '').split('/'),
+          title: displayName,
+          path: document.path,
+          assetUrl: '',
+          status: 'draft' as const,
+          summary: 'New documentation page.',
+          related: []
+        }),
+        lastReviewed: document.lastReviewed,
+        pageIndex: 0
+      };
+    });
+
+    descriptors.sort((left, right) => {
+      const leftOrder = staticOrder.get(left.path.toLowerCase());
+      const rightOrder = staticOrder.get(right.path.toLowerCase());
+      if (leftOrder !== undefined && rightOrder !== undefined) {
+        return leftOrder - rightOrder;
+      }
+      if (leftOrder !== undefined) {
+        return -1;
+      }
+      if (rightOrder !== undefined) {
+        return 1;
+      }
+      return left.path.localeCompare(right.path);
+    });
+    descriptors.forEach((descriptor, index) => {
+      descriptor.pageIndex = index;
+    });
+
+    return {
+      ...staticManifest,
+      generatedAt: new Date().toISOString(),
+      pages: descriptors,
+      nodes: this.buildTree(descriptors)
+    };
+  }
+
+  private buildTree(pages: DocumentDescriptor[]): FileTreeNode[] {
+    const nodes = new Map<string, FileTreeNode>();
+    const roots: FileTreeNode[] = [];
+
+    for (const page of pages) {
+      nodes.set(page.path.replace(/\.md$/i, ''), {
+        ...page,
+        type: 'markdown'
+      });
+    }
+
+    for (const page of pages) {
+      const key = page.path.replace(/\.md$/i, '');
+      const node = nodes.get(key)!;
+      const slash = key.lastIndexOf('/');
+      const parentKey = slash === -1 ? null : key.slice(0, slash);
+      const parent = parentKey ? nodes.get(parentKey) : undefined;
+      if (parent) {
+        parent.children ??= [];
+        parent.children.push(node);
+        parent.type = 'folder';
+      } else {
+        roots.push(node);
+      }
+    }
+
+    const sortChildren = (items: FileTreeNode[]): void => {
+      items.sort((left, right) => {
+        const leftIndex = left.pageIndex ?? Number.MAX_SAFE_INTEGER;
+        const rightIndex = right.pageIndex ?? Number.MAX_SAFE_INTEGER;
+        return leftIndex - rightIndex || left.displayName.localeCompare(right.displayName);
+      });
+      for (const item of items) {
+        if (item.children) {
+          sortChildren(item.children);
+        }
+      }
+    };
+    sortChildren(roots);
+    return roots;
+  }
+
+  private normalizeDocumentName(requestedName: string): string {
+    const name = requestedName
+      .trim()
+      .replace(/\.md$/i, '')
+      .replace(/[\\/]/g, ' ')
+      .replace(/\s+/g, ' ');
+    if (!name || name === '.' || name === '..') {
+      throw new Error('Enter a valid document name.');
+    }
+    return name;
+  }
+
+  private fileName(path: string): string {
+    return path.split('/').at(-1)!.replace(/\.md$/i, '').replaceAll(/[-_]/g, ' ');
+  }
+
+  private descriptorAsStored(page: DocumentDescriptor): StoredDocument {
+    const active = this.activeDocument();
+    return {
+      path: page.path,
+      body: active?.descriptor.path === page.path ? active.markdown : `# ${page.title}\n`,
+      version: active?.descriptor.path === page.path ? active.version : 1,
+      lastReviewed: page.lastReviewed,
+      createdAt: null,
+      updatedAt: null
+    };
   }
 
   private extractTitle(markdown: string, fallbackName: string): string {

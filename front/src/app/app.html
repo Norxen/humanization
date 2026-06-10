@@ -1,7 +1,13 @@
 <app-top-navbar
   [theme]="themeService.theme()"
+  [userEmail]="auth.user()?.email ?? null"
+  [authReady]="auth.ready()"
+  [canChangePassword]="auth.canChangePassword()"
   (menuToggle)="sidebarOpen.set(!sidebarOpen())"
   (themeToggle)="themeService.toggle()"
+  (login)="loginOpen.set(true)"
+  (passwordChange)="passwordChangeOpen.set(true)"
+  (logout)="logout()"
 />
 
 <div class="workspace">
@@ -10,7 +16,10 @@
       [nodes]="store.fileTree()"
       [activePageIndex]="store.activePageIndex()"
       [fileCount]="store.pages().length"
+      [canManage]="auth.isEditor()"
       (pageSelected)="selectPage($event)"
+      (documentCreateRequested)="createDocument($event)"
+      (documentDeleteRequested)="requestDeleteDocument($event)"
     />
   </aside>
 
@@ -44,6 +53,7 @@
           [document]="document"
           [previousPage]="store.previousPage()"
           [nextPage]="store.nextPage()"
+          [canEdit]="auth.isEditor()"
           (documentSelected)="selectPath($event)"
           (edit)="editing.set(true)"
           (previous)="goPrevious()"
@@ -61,3 +71,56 @@
     }
   </main>
 </div>
+
+@if (deleteTarget(); as target) {
+  <div class="modal-backdrop" (click)="closeDeleteModal()">
+    <section
+      class="delete-modal"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="delete-title"
+      aria-describedby="delete-description"
+      (click)="$event.stopPropagation()"
+    >
+      <span class="modal-eyebrow">Delete document</span>
+      <h2 id="delete-title">Delete {{ target.displayName }}?</h2>
+      @if (target.children?.length) {
+        <p id="delete-description">
+          This page still has child pages. Delete its children first so the tree hierarchy
+          remains valid.
+        </p>
+      } @else {
+        <p id="delete-description">
+          This permanently removes the page and its revision history from Firestore.
+          This action cannot be undone.
+        </p>
+      }
+
+      @if (deleteError(); as error) {
+        <p class="modal-error">{{ error }}</p>
+      }
+
+      <div class="modal-actions">
+        <button type="button" class="cancel-delete" [disabled]="deleting()" (click)="closeDeleteModal()">
+          Cancel
+        </button>
+        <button
+          type="button"
+          class="confirm-delete"
+          [disabled]="deleting() || !!target.children?.length"
+          (click)="confirmDeleteDocument()"
+        >
+          {{ deleting() ? 'Deleting...' : 'Delete document' }}
+        </button>
+      </div>
+    </section>
+  </div>
+}
+
+@if (loginOpen()) {
+  <app-login-dialog (closed)="loginOpen.set(false)" />
+}
+
+@if (passwordChangeOpen()) {
+  <app-change-password-dialog (closed)="passwordChangeOpen.set(false)" />
+}

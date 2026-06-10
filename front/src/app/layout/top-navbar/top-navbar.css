@@ -31,6 +31,17 @@ kbd {
   padding: 5px 8px; border: 1px solid var(--line); border-radius: 6px;
   color: #b9b0c3; background: var(--surface-raised); font: inherit;
 }
+.user-email {
+  max-width: 120px; overflow: hidden; color: #cbbfd4;
+  text-overflow: ellipsis; white-space: nowrap;
+}
+.auth-button {
+  min-height: 32px; padding: 0 10px; border: 1px solid var(--line);
+  border-radius: 7px; color: #cbbfd4; background: var(--surface-raised);
+  font: inherit; cursor: pointer;
+}
+.auth-button:hover { color: #fff; border-color: rgba(168, 85, 247, .45); }
+.auth-button:disabled { cursor: wait; opacity: .45; }
 .theme-button {
   width: 34px; height: 34px; display: grid; place-items: center;
   padding: 0; border: 1px solid var(--line); border-radius: 9px;

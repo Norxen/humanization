@@ -1,3 +1,4 @@
+import { computed, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DocumentationManifest } from './core/models/document-page.model';
@@ -8,6 +9,58 @@ import {
   DocumentRepository
 } from './core/repositories/document.repository';
 import { StoredDocument } from './core/models/document-page.model';
+import { AuthService } from './core/services/auth.service';
+
+class FakeAuthService {
+  readonly user = signal<{ email: string; providerData: { providerId: string }[] } | null>({
+    email: 'editor@example.com',
+    providerData: [{ providerId: 'password' }]
+  });
+  readonly isEditor = signal(true);
+  readonly canChangePassword = computed(
+    () => this.user()?.providerData.some((provider) => provider.providerId === 'password') ?? false
+  );
+  readonly ready = signal(true);
+  readonly error = signal<string | null>(null);
+
+  initialize(): Promise<never> {
+    return Promise.resolve(undefined as never);
+  }
+
+  login(email: string, password: string): Promise<void> {
+    if (email === 'editor@example.com' && password === 'correct-password') {
+      this.user.set({ email, providerData: [{ providerId: 'password' }] });
+      this.isEditor.set(true);
+      return Promise.resolve();
+    }
+    return Promise.reject(new Error('The email or password is incorrect.'));
+  }
+
+  loginWithGoogle(): Promise<void> {
+    this.user.set({
+      email: 'google@example.com',
+      providerData: [{ providerId: 'google.com' }]
+    });
+    this.isEditor.set(true);
+    return Promise.resolve();
+  }
+
+  changePassword(currentPassword: string, newPassword: string): Promise<void> {
+    if (currentPassword !== 'correct-password') {
+      return Promise.reject(new Error('The current password is incorrect.'));
+    }
+    if (newPassword.length < 6) {
+      return Promise.reject(new Error('Weak password.'));
+    }
+    return Promise.resolve();
+  }
+
+  logout(): Promise<void> {
+    this.user.set(null);
+    this.isEditor.set(false);
+    return Promise.resolve();
+  }
+}
 
 class MemoryDocumentRepository extends DocumentRepository {
   forceConflict = false;
@@ -46,11 +99,36 @@ The narrative foundation.`,
     ]
   ]);
 
+  list(): Promise<StoredDocument[]> {
+    return Promise.resolve([...this.documents.values()].map((document) => ({ ...document })));
+  }
+
   load(path: string): Promise<StoredDocument> {
     const document = this.documents.get(path);
     return document
       ? Promise.resolve({ ...document })
       : Promise.reject(new Error(`Missing ${path}`));
+  }
+
+  create(path: string, body: string): Promise<StoredDocument> {
+    if (this.documents.has(path)) {
+      return Promise.reject(new Error(`A document already exists at "${path}".`));
+    }
+    const created: StoredDocument = {
+      path,
+      body,
+      version: 1,
+      lastReviewed: '2026-06-10',
+      createdAt: new Date('2026-06-10T00:00:00Z'),
+      updatedAt: new Date('2026-06-10T00:00:00Z')
+    };
+    this.documents.set(path, created);
+    return Promise.resolve({ ...created });
+  }
+
+  delete(path: string): Promise<void> {
+    this.documents.delete(path);
+    return Promise.resolve();
   }
 
   save(path: string, body: string, expectedVersion: number): Promise<StoredDocument> {
@@ -80,6 +158,7 @@ The narrative foundation.`,
 }
 
 let repository: MemoryDocumentRepository;
+let auth: FakeAuthService;
 
 const manifest: DocumentationManifest = {
   name: 'game-design',
@@ -153,6 +232,7 @@ describe('App', () => {
   beforeEach(async () => {
     localStorage.clear();
     repository = new MemoryDocumentRepository();
+    auth = new FakeAuthService();
     vi.stubGlobal(
       'fetch',
       vi.fn(async (input: string | URL | Request) => {
@@ -174,6 +254,9 @@ describe('App', () => {
       .overrideProvider(DOCUMENT_REPOSITORY, {
         useValue: repository
       })
+      .overrideProvider(AuthService, {
+        useValue: auth
+      })
       .compileComponents();
   });
 
@@ -185,6 +268,104 @@ describe('App', () => {
   it('should create the app', () => {
     const fixture = TestBed.createComponent(App);
     expect(fixture.componentInstance).toBeTruthy();
+  });
+
+  it('should show read-only controls while signed out and allow login', async () => {
+    auth.user.set(null);
+    auth.isEditor.set(false);
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('.auth-button')?.textContent).toContain(
+        'Login'
+      );
+      expect(fixture.nativeElement.querySelector('.edit-button')).toBeNull();
+      expect(fixture.nativeElement.querySelector('.add-root')).toBeNull();
+    });
+
+    fixture.nativeElement.querySelector('.auth-button').click();
+    fixture.detectChanges();
+    const inputs = fixture.nativeElement.querySelectorAll('.login-dialog input');
+    inputs[0].value = 'editor@example.com';
+    inputs[0].dispatchEvent(new Event('input', { bubbles: true }));
+    inputs[1].value = 'correct-password';
+    inputs[1].dispatchEvent(new Event('input', { bubbles: true }));
+    (fixture.nativeElement.querySelector('.login-dialog form') as HTMLFormElement)
+      .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(auth.user()?.email).toBe('editor@example.com');
+      expect(fixture.nativeElement.querySelector('.edit-button')).toBeTruthy();
+      expect(fixture.nativeElement.querySelector('.login-dialog')).toBeNull();
+    });
+  });
+
+  it('should sign in with Google and hide password changes for Google-only accounts', async () => {
+    auth.user.set(null);
+    auth.isEditor.set(false);
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('.auth-button')).toBeTruthy();
+    });
+    fixture.nativeElement.querySelector('.auth-button').click();
+    fixture.detectChanges();
+    (fixture.nativeElement.querySelector('.google-login') as HTMLButtonElement).click();
+
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(auth.user()?.email).toBe('google@example.com');
+      expect(fixture.nativeElement.querySelector('.edit-button')).toBeTruthy();
+      expect(fixture.nativeElement.querySelector('.meta')?.textContent).not.toContain(
+        'Password'
+      );
+    });
+  });
+
+  it('should change the password after confirming the current password', async () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(
+        [...fixture.nativeElement.querySelectorAll('.auth-button')].some(
+          (button: HTMLElement) => button.textContent?.includes('Password')
+        )
+      ).toBe(true);
+    });
+
+    const passwordButton = [...fixture.nativeElement.querySelectorAll('.auth-button')]
+      .find((button: HTMLElement) => button.textContent?.includes('Password')) as HTMLButtonElement;
+    passwordButton.click();
+    fixture.detectChanges();
+
+    const inputs = fixture.nativeElement.querySelectorAll(
+      'app-change-password-dialog input'
+    );
+    for (const [input, value] of [
+      [inputs[0], 'correct-password'],
+      [inputs[1], 'new-secure-password'],
+      [inputs[2], 'new-secure-password']
+    ] as [HTMLInputElement, string][]) {
+      input.value = value;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    (fixture.nativeElement.querySelector(
+      'app-change-password-dialog form'
+    ) as HTMLFormElement).dispatchEvent(
+      new Event('submit', { bubbles: true, cancelable: true })
+    );
+
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('app-change-password-dialog')).toBeNull();
+    });
   });
 
   it('should load and render the generated markdown workspace', async () => {
@@ -237,7 +418,7 @@ describe('App', () => {
     });
   });
 
-  it('should load markdown content by selecting a folder node', async () => {
+  it('should render and select childless entries as files', async () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
 
@@ -246,8 +427,9 @@ describe('App', () => {
       expect(fixture.nativeElement.querySelectorAll('.tree-row')).toHaveLength(2);
     });
 
-    const folder = fixture.nativeElement.querySelector('.tree-row.folder') as HTMLButtonElement;
-    folder.click();
+    const rows = fixture.nativeElement.querySelectorAll('.tree-row');
+    expect(rows[1].classList.contains('folder')).toBe(false);
+    (rows[1].querySelector('.node-select') as HTMLButtonElement).click();
 
     await vi.waitFor(() => {
       fixture.detectChanges();
@@ -256,7 +438,93 @@ describe('App', () => {
       );
     });
 
-    expect(folder.classList.contains('active')).toBe(true);
+    expect(rows[1].classList.contains('active')).toBe(true);
+  });
+
+  it('should create a child page and convert its parent into a folder', async () => {
+    vi.spyOn(window, 'prompt').mockReturnValue('Combat Notes');
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelectorAll('.tree-row')).toHaveLength(2);
+    });
+
+    const rows = fixture.nativeElement.querySelectorAll('.tree-row');
+    (rows[1].querySelector('.add-child') as HTMLButtonElement).click();
+
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(repository.documents.has('storytelling/Combat Notes.md')).toBe(true);
+      expect(fixture.nativeElement.querySelectorAll('.tree-row')).toHaveLength(3);
+    });
+
+    const parent = fixture.nativeElement.querySelectorAll('.tree-row')[1];
+    expect(parent.classList.contains('folder')).toBe(true);
+    expect(fixture.nativeElement.querySelector('app-document-editor')).toBeTruthy();
+    expect(
+      (fixture.nativeElement.querySelector('textarea') as HTMLTextAreaElement).value
+    ).toContain('# Combat Notes');
+  });
+
+  it('should confirm and delete a leaf document', async () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelectorAll('.tree-row')).toHaveLength(2);
+    });
+
+    const secondRow = fixture.nativeElement.querySelectorAll('.tree-row')[1];
+    (secondRow.querySelector('.delete-document') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.delete-modal')?.textContent).toContain(
+      'Delete Storytelling?'
+    );
+    (fixture.nativeElement.querySelector('.confirm-delete') as HTMLButtonElement).click();
+
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(repository.documents.has('storytelling.md')).toBe(false);
+      expect(fixture.nativeElement.querySelectorAll('.tree-row')).toHaveLength(1);
+      expect(fixture.nativeElement.querySelector('.delete-modal')).toBeNull();
+    });
+  });
+
+  it('should prevent deleting a page that still has children', async () => {
+    vi.spyOn(window, 'prompt').mockReturnValue('Combat Notes');
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelectorAll('.tree-row')).toHaveLength(2);
+    });
+
+    const initialRows = fixture.nativeElement.querySelectorAll('.tree-row');
+    (initialRows[1].querySelector('.add-child') as HTMLButtonElement).click();
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelectorAll('.tree-row')).toHaveLength(3);
+    });
+
+    fixture.componentInstance.finishEditing();
+    fixture.detectChanges();
+    const parent = fixture.nativeElement.querySelectorAll('.tree-row')[1];
+    (parent.querySelector('.delete-document') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    const confirm = fixture.nativeElement.querySelector(
+      '.confirm-delete'
+    ) as HTMLButtonElement;
+    expect(confirm.disabled).toBe(true);
+    expect(fixture.nativeElement.querySelector('.delete-modal')?.textContent).toContain(
+      'Delete its children first'
+    );
+    expect(repository.documents.has('storytelling.md')).toBe(true);
   });
 
   it('should edit, preview, and save the active Firestore document', async () => {

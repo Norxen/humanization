@@ -3,6 +3,7 @@
 # Compiled output
 /dist
 /public/docs/manifest.json
+/public/firebase-config.json
 /tmp
 /out-tsc
 /bazel-out

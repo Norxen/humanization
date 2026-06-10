@@ -47,8 +47,11 @@ npm run build
 ## Firebase Production Setup
 
 1. Create a Firebase project and Firestore database.
-2. Deploy `front/firestore.rules` and `front/firestore.indexes.json`.
-3. Authenticate Application Default Credentials and seed the current repository documents:
+2. Enable Firebase Authentication's Email/Password and Google providers, then create or sign in editor accounts.
+3. For each authorized account, create `editors/{uid}` in Firestore using the account UID as the document ID.
+4. Add `norxen.github.io` to Authentication authorized domains.
+5. Deploy `front/firestore.rules` and `front/firestore.indexes.json`.
+6. Authenticate Application Default Credentials and seed the current repository documents:
 
 ```bash
 cd front
@@ -56,20 +59,23 @@ gcloud auth application-default login
 npm run firebase:seed -- --project=<firebase-project-id>
 ```
 
-4. Configure these GitHub repository variables:
+7. Configure `SECRET_API_KEY_FIREBASE` as a GitHub Actions repository secret. The workflow maps it to the build-time `FIREBASE_API_KEY` environment variable.
 
-- `FIREBASE_API_KEY`
+8. Configure these GitHub Actions repository variables:
+
 - `FIREBASE_AUTH_DOMAIN`
 - `FIREBASE_PROJECT_ID`
+- `FIREBASE_STORAGE_BUCKET`
+- `FIREBASE_MESSAGING_SENDER_ID`
 - `FIREBASE_APP_ID`
 - `FIREBASE_APP_CHECK_SITE_KEY`
 
-5. Register the Pages domain in Firebase App Check, verify traffic, and then enforce App Check for Firestore.
+9. Register the Pages domain in Firebase App Check, verify traffic, and then enforce App Check for Firestore.
 
-The current rules intentionally permit public updates to existing documents. They deny create/delete operations and retain immutable revisions, but authentication must replace public writes before broader use.
+Reads are public. Creating, editing, deleting, and revision writes require a signed-in Firebase Authentication user whose UID exists in the protected `editors` collection. Password users can change their password after reauthentication; Google-only users manage passwords through Google.
 
 ## Publishing
 
-Pushes to `main` trigger the GitHub Pages workflow. It writes Firebase runtime configuration from repository variables, generates the manifest, builds Angular, and deploys the browser output.
+Pushes to `main` trigger the GitHub Pages workflow. It writes the ignored Firebase runtime configuration from the API-key secret and repository variables, generates the manifest, builds Angular, and deploys the browser output.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) before adding or reorganizing documentation.
