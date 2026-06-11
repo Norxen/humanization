@@ -38,6 +38,10 @@ export interface LoadedDocument {
 export interface StoredDocument {
   path: string;
   body: string;
+  status: DocumentStatus;
+  summary: string;
+  related: string[];
+  order: number;
   version: number;
   lastReviewed: string;
   createdAt: Date | null;

@@ -18,7 +18,7 @@ const projectId =
   projectArgument?.slice('--project='.length) ||
   process.env.GCLOUD_PROJECT ||
   process.env.GOOGLE_CLOUD_PROJECT ||
-  'manuscript-local';
+  'humanization-1c628';
 
 const app = initializeApp(
   process.env.FIRESTORE_EMULATOR_HOST

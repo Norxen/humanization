@@ -9,6 +9,10 @@ import {
 interface FirestoreDocumentData {
   path: string;
   body: string;
+  status: 'planned' | 'draft' | 'review' | 'approved';
+  summary: string;
+  related: string[];
+  order: number;
   version: number;
   lastReviewed: string;
   createdAt?: { toDate(): Date };
@@ -19,31 +23,46 @@ interface FirestoreDocumentData {
 export class FirestoreDocumentRepository extends DocumentRepository {
   private readonly firebase = inject(FirebaseService);
 
-  async list(): Promise<StoredDocument[]> {
+  async list(projectId: string): Promise<StoredDocument[]> {
     const firestore = await this.firebase.firestore();
-    const { collection, getDocs } = await import('firebase/firestore');
-    const snapshot = await getDocs(collection(firestore, 'documents'));
+    const { collection, getDocs, orderBy, query } = await import('firebase/firestore');
+    const snapshot = await getDocs(
+      query(collection(firestore, 'projects', projectId, 'documents'), orderBy('order'))
+    );
     return snapshot.docs
       .map((document) => this.mapDocument(document.data() as FirestoreDocumentData))
-      .sort((left, right) => left.path.localeCompare(right.path));
+      .sort((left, right) => left.order - right.order || left.path.localeCompare(right.path));
   }
 
-  async load(path: string): Promise<StoredDocument> {
+  async load(projectId: string, path: string): Promise<StoredDocument> {
     const firestore = await this.firebase.firestore();
     const { doc, getDoc } = await import('firebase/firestore');
-    const snapshot = await getDoc(doc(firestore, 'documents', this.documentId(path)));
+    const snapshot = await getDoc(
+      doc(firestore, 'projects', projectId, 'documents', this.documentId(path))
+    );
     if (!snapshot.exists()) {
       throw new Error(`Firestore document "${path}" does not exist.`);
     }
     return this.mapDocument(snapshot.data() as FirestoreDocumentData);
   }
 
-  async create(path: string, body: string): Promise<StoredDocument> {
+  async create(
+    projectId: string,
+    path: string,
+    body: string,
+    order: number
+  ): Promise<StoredDocument> {
     const firestore = await this.firebase.firestore();
-    const { doc, runTransaction, serverTimestamp } = await import(
+    const { doc, increment, runTransaction, serverTimestamp } = await import(
       'firebase/firestore'
     );
-    const reference = doc(firestore, 'documents', this.documentId(path));
+    const reference = doc(
+      firestore,
+      'projects',
+      projectId,
+      'documents',
+      this.documentId(path)
+    );
 
     await runTransaction(firestore, async (transaction) => {
       const snapshot = await transaction.get(reference);
@@ -54,24 +73,38 @@ export class FirestoreDocumentRepository extends DocumentRepository {
       transaction.set(reference, {
         path,
         body,
+        status: 'draft',
+        summary: 'New documentation page.',
+        related: [],
+        order,
         version: 1,
         lastReviewed: this.today(),
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       });
+      transaction.update(doc(firestore, 'projects', projectId), {
+        documentCount: increment(1),
+        updatedAt: serverTimestamp()
+      });
     });
 
-    return this.load(path);
+    return this.load(projectId, path);
   }
 
-  async delete(path: string): Promise<void> {
+  async delete(projectId: string, path: string): Promise<void> {
     const firestore = await this.firebase.firestore();
-    const { collection, doc, getDocs, writeBatch } = await import(
+    const { collection, doc, getDocs, increment, serverTimestamp, writeBatch } = await import(
       'firebase/firestore'
     );
-    const reference = doc(firestore, 'documents', this.documentId(path));
+    const reference = doc(
+      firestore,
+      'projects',
+      projectId,
+      'documents',
+      this.documentId(path)
+    );
     const revisions = await getDocs(collection(reference, 'revisions'));
-    if (revisions.size > 499) {
+    if (revisions.size > 497) {
       throw new Error('This document has too many revisions to delete safely.');
     }
 
@@ -80,10 +113,15 @@ export class FirestoreDocumentRepository extends DocumentRepository {
       batch.delete(revision.ref);
     }
     batch.delete(reference);
+    batch.update(doc(firestore, 'projects', projectId), {
+      documentCount: increment(-1),
+      updatedAt: serverTimestamp()
+    });
     await batch.commit();
   }
 
   async save(
+    projectId: string,
     path: string,
     body: string,
     expectedVersion: number
@@ -92,7 +130,13 @@ export class FirestoreDocumentRepository extends DocumentRepository {
     const { doc, runTransaction, serverTimestamp } = await import(
       'firebase/firestore'
     );
-    const reference = doc(firestore, 'documents', this.documentId(path));
+    const reference = doc(
+      firestore,
+      'projects',
+      projectId,
+      'documents',
+      this.documentId(path)
+    );
 
     await runTransaction(firestore, async (transaction) => {
       const snapshot = await transaction.get(reference);
@@ -121,7 +165,7 @@ export class FirestoreDocumentRepository extends DocumentRepository {
       });
     });
 
-    return this.load(path);
+    return this.load(projectId, path);
   }
 
   private documentId(path: string): string {
@@ -132,6 +176,10 @@ export class FirestoreDocumentRepository extends DocumentRepository {
     return {
       path: data.path,
       body: data.body,
+      status: data.status ?? 'draft',
+      summary: data.summary ?? 'Documentation page.',
+      related: data.related ?? [],
+      order: data.order ?? Number.MAX_SAFE_INTEGER,
       version: data.version,
       lastReviewed: data.lastReviewed,
       createdAt: data.createdAt?.toDate() ?? null,

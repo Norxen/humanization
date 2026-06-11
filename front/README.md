@@ -1,13 +1,13 @@
 # Manuscript Frontend
 
-Manuscript is the Angular 21 application that renders and edits the Roguelike Civilization Rebuilder design knowledge base using Firestore.
+Manuscript is the Angular 21 application that renders and edits multiple public game-design knowledge bases using Firestore.
 
 ## Commands
 
 ```bash
 npm ci
 npm run firebase:emulators
-npm run firebase:seed:emulator
+npm run firebase:migrate:projects:emulator
 npm start
 npm test
 npm run test:rules
@@ -18,7 +18,7 @@ npm run build
 
 ## Documentation Pipeline
 
-Repository snapshots live in `public/docs/game-design`. `docs.navigation.json` remains the authoritative tree and reading order. Firestore is authoritative for runtime Markdown bodies.
+Repository snapshots live in `public/docs/game-design` and remain seed/export material for the original project. Firestore is authoritative for runtime projects, navigation metadata, Markdown bodies, membership, and revisions.
 
 `scripts/generate-docs-manifest.mjs`:
 
@@ -33,13 +33,16 @@ The Angular store fetches the generated manifest, then loads the selected body f
 
 ## Firestore
 
-- `documents/{encodeURIComponent(path)}` stores the current Markdown body and version.
-- `documents/{id}/revisions/{version}` stores immutable previous bodies.
+- `projects/{projectId}` stores lobby metadata, ownership, lifecycle state, and counts.
+- `projects/{projectId}/members/{uid}` stores owner/editor roles.
+- `projects/{projectId}/documents/{encodeURIComponent(path)}` stores body, metadata, order, and version.
+- `projects/{projectId}/documents/{id}/revisions/{version}` stores immutable previous bodies.
+- `platformAdmins/{uid}` authorizes project creation and archive recovery.
 - Saves use transactions and reject stale versions.
 - Documents can be created, updated, and deleted. Parent pages must be emptied before deletion.
 - The runtime tree is inferred from Firestore paths. A page becomes a folder-style entry whenever it has child pages.
 - The editor persists unsaved drafts in `localStorage`.
-- Reading is public. Firebase email/password or Google authentication plus editor authorization is required for all writes.
+- Reading active projects is public. Firebase authentication plus project membership is required for document writes.
 
 Run the emulator in one terminal and seed it from another before starting Angular. Production seeding uses Application Default Credentials and refuses to overwrite existing records unless `--force` is supplied.
 
@@ -52,11 +55,11 @@ npm run firebase:emulators
 In another terminal:
 
 ```bash
-npm run firebase:seed:emulator
+npm run firebase:migrate:projects:emulator
 npm start
 ```
 
-Open the Emulator UI at `http://127.0.0.1:4000`, select **Authentication**, and add a local email/password user. Copy its UID, then create an `editors` collection document whose document ID is that UID. The editor document may contain the account email for administration. Use that account through the application's Login button.
+Open the Emulator UI at `http://127.0.0.1:4000` and create an Authentication user with UID `editor-user` to use the seeded local owner/admin membership.
 
 Do not place production Firebase values in `public/firebase-config.json`. Production configuration is generated only by the deployment workflow.
 
@@ -64,7 +67,7 @@ For production:
 
 1. Open Firebase Console > Authentication > Sign-in method and enable **Email/Password** and **Google**.
 2. Open Authentication > Users and create each editor account.
-3. Copy each account UID and create `editors/{uid}` in Firestore. The UID must be the document ID.
+3. Copy the administrator UID and create `platformAdmins/{uid}` in Firestore.
 4. Open Authentication > Settings > Authorized domains and add `norxen.github.io`.
 5. Deploy the authenticated Firestore rules before exposing create/edit/delete controls.
 
@@ -75,7 +78,9 @@ Email/password users can change their password from the top navigation. The flow
 ## Application Structure
 
 - `src/app/core/` contains models and document, URL, Markdown, and theme services.
-- `src/app/features/file-tree/` renders configured navigation.
+- `src/app/features/project-lobby/` renders the project card grid and archive view.
+- `src/app/features/project-workspace/` hosts the routed document workspace.
+- `src/app/features/file-tree/` renders project-scoped navigation.
 - `src/app/features/markdown-viewer/` renders metadata, Markdown, PlantUML, and diagram controls.
 - `src/app/features/document-editor/` provides validated Markdown editing, preview, draft recovery, and conflict comparison.
 - `src/app/shared/page-navigation/` renders configured previous/next pages.

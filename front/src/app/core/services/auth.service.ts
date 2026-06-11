@@ -8,7 +8,7 @@ export class AuthService {
   private authInitialization: Promise<Auth> | null = null;
 
   readonly user = signal<User | null>(null);
-  readonly isEditor = signal(false);
+  readonly isPlatformAdmin = signal(false);
   readonly canChangePassword = computed(
     () => this.user()?.providerData.some((provider) => provider.providerId === 'password') ?? false
   );
@@ -105,21 +105,28 @@ export class AuthService {
       );
     }
 
-    authModule.onAuthStateChanged(auth, async (user) => {
-      this.user.set(user);
-      this.isEditor.set(false);
-      if (user) {
-        try {
-          const firestore = await this.firebase.firestore();
-          const { doc, getDoc } = await import('firebase/firestore');
-          this.isEditor.set(
-            (await getDoc(doc(firestore, 'editors', user.uid))).exists()
-          );
-        } catch {
-          this.isEditor.set(false);
+    await new Promise<void>((resolve) => {
+      let initialized = false;
+      authModule.onAuthStateChanged(auth, async (user) => {
+        this.user.set(user);
+        this.isPlatformAdmin.set(false);
+        if (user) {
+          try {
+            const firestore = await this.firebase.firestore();
+            const { doc, getDoc } = await import('firebase/firestore');
+            this.isPlatformAdmin.set(
+              (await getDoc(doc(firestore, 'platformAdmins', user.uid))).exists()
+            );
+          } catch {
+            this.isPlatformAdmin.set(false);
+          }
         }
-      }
-      this.ready.set(true);
+        this.ready.set(true);
+        if (!initialized) {
+          initialized = true;
+          resolve();
+        }
+      });
     });
     return auth;
   }

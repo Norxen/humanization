@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 const directory = path.dirname(fileURLToPath(import.meta.url));
 const target = path.resolve(directory, '..', 'public', 'firebase-config.json');
 const useEmulator = process.argv.includes('--emulator');
+const localProjectId = 'humanization-1c628';
 const required = [
   'FIREBASE_API_KEY',
   'FIREBASE_AUTH_DOMAIN',
@@ -26,9 +27,9 @@ const config = useEmulator
   ? {
       firebase: {
         apiKey: 'demo-api-key',
-        authDomain: 'manuscript-local.firebaseapp.com',
-        projectId: 'manuscript-local',
-        storageBucket: 'manuscript-local.appspot.com',
+        authDomain: `${localProjectId}.firebaseapp.com`,
+        projectId: localProjectId,
+        storageBucket: `${localProjectId}.appspot.com`,
         messagingSenderId: '000000000000',
         appId: '1:000000000000:web:local'
       },

@@ -8,14 +8,13 @@ import {
 import { FileTreeNode } from '../models/file-tree-node.model';
 import { MarkdownRendererService } from './markdown-renderer.service';
 import { DOCUMENT_REPOSITORY } from '../repositories/document.repository';
-import { AppUrlService } from './app-url.service';
 
 @Injectable({ providedIn: 'root' })
 export class DocumentationStore {
   private readonly renderer = inject(MarkdownRendererService);
-  private readonly appUrl = inject(AppUrlService);
   private readonly repository = inject(DOCUMENT_REPOSITORY);
   private loadSequence = 0;
+  private projectId: string | null = null;
 
   readonly manifest = signal<DocumentationManifest | null>(null);
   readonly activePageIndex = signal(0);
@@ -28,16 +27,14 @@ export class DocumentationStore {
   readonly previousPage = computed(() => this.pages()[this.activePageIndex() - 1]);
   readonly nextPage = computed(() => this.pages()[this.activePageIndex() + 1]);
 
-  async initialize(): Promise<void> {
+  async initialize(projectId: string): Promise<void> {
+    this.projectId = projectId;
+    this.loading.set(true);
+    this.error.set(null);
+    this.activeDocument.set(null);
     try {
-      const response = await fetch(this.appUrl.resolve('docs/manifest.json'));
-      if (!response.ok) {
-        throw new Error(`Manifest request failed with ${response.status}.`);
-      }
-
-      const staticManifest = (await response.json()) as DocumentationManifest;
-      const documents = await this.repository.list();
-      const manifest = this.buildRuntimeManifest(staticManifest, documents);
+      const documents = await this.repository.list(projectId);
+      const manifest = this.buildRuntimeManifest(documents);
       this.manifest.set(manifest);
       const entryIndex = manifest.pages.findIndex(
         (page) => page.path.toLowerCase() === 'index.md'
@@ -61,7 +58,7 @@ export class DocumentationStore {
     this.error.set(null);
 
     try {
-      const stored = await this.repository.load(descriptor.path);
+      const stored = await this.repository.load(this.requireProjectId(), descriptor.path);
       const runtimeDescriptor = {
         ...descriptor,
         lastReviewed: stored.lastReviewed
@@ -111,6 +108,7 @@ export class DocumentationStore {
     }
 
     const saved = await this.repository.save(
+      this.requireProjectId(),
       current.descriptor.path,
       body,
       expectedVersion
@@ -141,13 +139,18 @@ export class DocumentationStore {
       throw new Error(`"${path}" already exists.`);
     }
 
-    const stored = await this.repository.create(path, `# ${name}\n\n`);
+    const stored = await this.repository.create(
+      this.requireProjectId(),
+      path,
+      `# ${name}\n\n`,
+      this.pages().length
+    );
     const current = this.manifest();
     if (!current) {
       throw new Error('Documentation navigation is not initialized.');
     }
 
-    const manifest = this.buildRuntimeManifest(current, [
+    const manifest = this.buildRuntimeManifest([
       ...this.pages().map((page) => this.descriptorAsStored(page)),
       stored
     ]);
@@ -173,11 +176,13 @@ export class DocumentationStore {
       throw new Error('Delete this page\'s children before deleting the parent page.');
     }
 
-    await this.repository.delete(path);
-    const remainingDocuments = (await this.repository.list()).filter(
+    await this.repository.delete(this.requireProjectId(), path);
+    const remainingDocuments = (
+      await this.repository.list(this.requireProjectId())
+    ).filter(
       (document) => document.path !== path
     );
-    const nextManifest = this.buildRuntimeManifest(current, remainingDocuments);
+    const nextManifest = this.buildRuntimeManifest(remainingDocuments);
     const deletedIndex = descriptor.pageIndex;
     this.manifest.set(nextManifest);
 
@@ -191,57 +196,34 @@ export class DocumentationStore {
     await this.selectPage(nextIndex);
   }
 
-  private buildRuntimeManifest(
-    staticManifest: DocumentationManifest,
-    documents: StoredDocument[]
-  ): DocumentationManifest {
-    const staticByPath = new Map(
-      staticManifest.pages.map((page) => [page.path.toLowerCase(), page])
-    );
-    const staticOrder = new Map(
-      staticManifest.pages.map((page, index) => [page.path.toLowerCase(), index])
-    );
+  private buildRuntimeManifest(documents: StoredDocument[]): DocumentationManifest {
     const descriptors = documents.map((document) => {
-      const existing = staticByPath.get(document.path.toLowerCase());
       const displayName = this.fileName(document.path);
       return {
-        ...(existing ?? {
-          id: document.path,
-          name: `${displayName}.md`,
-          displayName,
-          displayPath: document.path.replace(/\.md$/i, '').split('/'),
-          title: displayName,
-          path: document.path,
-          assetUrl: '',
-          status: 'draft' as const,
-          summary: 'New documentation page.',
-          related: []
-        }),
+        id: document.path,
+        name: `${displayName}.md`,
+        displayName,
+        displayPath: document.path.replace(/\.md$/i, '').split('/'),
+        title: displayName,
+        path: document.path,
+        assetUrl: '',
+        status: document.status,
+        summary: document.summary,
+        related: document.related,
         lastReviewed: document.lastReviewed,
-        pageIndex: 0
+        pageIndex: document.order
       };
     });
 
     descriptors.sort((left, right) => {
-      const leftOrder = staticOrder.get(left.path.toLowerCase());
-      const rightOrder = staticOrder.get(right.path.toLowerCase());
-      if (leftOrder !== undefined && rightOrder !== undefined) {
-        return leftOrder - rightOrder;
-      }
-      if (leftOrder !== undefined) {
-        return -1;
-      }
-      if (rightOrder !== undefined) {
-        return 1;
-      }
-      return left.path.localeCompare(right.path);
+      return left.pageIndex - right.pageIndex || left.path.localeCompare(right.path);
     });
     descriptors.forEach((descriptor, index) => {
       descriptor.pageIndex = index;
     });
 
     return {
-      ...staticManifest,
+      name: this.projectId ?? 'project',
       generatedAt: new Date().toISOString(),
       pages: descriptors,
       nodes: this.buildTree(descriptors)
@@ -311,6 +293,10 @@ export class DocumentationStore {
     return {
       path: page.path,
       body: active?.descriptor.path === page.path ? active.markdown : `# ${page.title}\n`,
+      status: page.status,
+      summary: page.summary,
+      related: page.related,
+      order: page.pageIndex,
       version: active?.descriptor.path === page.path ? active.version : 1,
       lastReviewed: page.lastReviewed,
       createdAt: null,
@@ -328,4 +314,10 @@ export class DocumentationStore {
     return `${Math.max(1, Math.ceil(words / 220))} min read`;
   }
 
+  private requireProjectId(): string {
+    if (!this.projectId) {
+      throw new Error('No project is active.');
+    }
+    return this.projectId;
+  }
 }

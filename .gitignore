@@ -8,3 +8,4 @@ runtime/
 backups/
 *.log
 docs/game-design/diagrams/*
+.playwright-cli/

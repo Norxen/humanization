@@ -2,11 +2,48 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    function canWrite() {
-      return request.auth != null
-        && exists(
-          /databases/$(database)/documents/editors/$(request.auth.uid)
-        );
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function platformAdmin() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/platformAdmins/$(request.auth.uid));
+    }
+
+    function projectPath(projectId) {
+      return /databases/$(database)/documents/projects/$(projectId);
+    }
+
+    function project(projectId) {
+      return get(projectPath(projectId)).data;
+    }
+
+    function activeProject(projectId) {
+      return project(projectId).status == 'active';
+    }
+
+    function memberPath(projectId) {
+      return /databases/$(database)/documents/projects/$(projectId)/members/$(request.auth.uid);
+    }
+
+    function memberRole(projectId) {
+      return signedIn() && exists(memberPath(projectId))
+        ? get(memberPath(projectId)).data.role
+        : null;
+    }
+
+    function projectOwner(projectId) {
+      return signedIn() && project(projectId).ownerId == request.auth.uid;
+    }
+
+    function canEdit(projectId) {
+      return platformAdmin()
+        || (activeProject(projectId) && memberRole(projectId) in ['owner', 'editor']);
+    }
+
+    function canManage(projectId) {
+      return platformAdmin() || projectOwner(projectId);
     }
 
     function validDate(value) {
@@ -14,80 +51,164 @@ service cloud.firestore {
         && value.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
     }
 
-    match /editors/{userId} {
-      allow read: if request.auth != null && request.auth.uid == userId;
+    function validSlug(value) {
+      return value is string
+        && value.size() >= 3
+        && value.size() <= 80
+        && value.matches('^[a-z0-9]+(?:-[a-z0-9]+)*$');
+    }
+
+    match /platformAdmins/{userId} {
+      allow read: if signedIn() && request.auth.uid == userId;
       allow write: if false;
     }
 
-    match /documents/{documentId} {
-      function validDocumentCreate() {
-        return request.resource.data.keys().hasOnly([
-            'path',
-            'body',
-            'version',
-            'lastReviewed',
-            'createdAt',
-            'updatedAt'
-          ])
-          && request.resource.data.path is string
-          && request.resource.data.path.size() > 3
-          && request.resource.data.path.size() <= 500
-          && request.resource.data.path.matches('^.+\\.md$')
-          && request.resource.data.body is string
-          && request.resource.data.body.size() > 0
-          && request.resource.data.body.size() <= 512000
-          && request.resource.data.version == 1
-          && validDate(request.resource.data.lastReviewed)
-          && request.resource.data.createdAt == request.time
-          && request.resource.data.updatedAt == request.time;
-      }
-
-      function validDocumentUpdate() {
-        return request.resource.data.diff(resource.data).affectedKeys()
-            .hasOnly(['body', 'version', 'lastReviewed', 'updatedAt'])
-          && request.resource.data.path == resource.data.path
-          && request.resource.data.createdAt == resource.data.createdAt
-          && request.resource.data.body is string
-          && request.resource.data.body.size() > 0
-          && request.resource.data.body.size() <= 512000
-          && request.resource.data.version == resource.data.version + 1
-          && validDate(request.resource.data.lastReviewed)
-          && request.resource.data.updatedAt == request.time
-          && existsAfter(
-            /databases/$(database)/documents/documents/$(documentId)/revisions/$(resource.data.version)
-          );
-      }
-
+    match /projectSlugs/{slug} {
       allow read: if true;
-      allow create: if canWrite() && validDocumentCreate();
-      allow delete: if canWrite();
-      allow update: if canWrite() && validDocumentUpdate();
+      allow create: if (platformAdmin() || projectOwner(request.resource.data.projectId))
+        && validSlug(slug)
+        && request.resource.data.keys().hasOnly(['projectId']);
+      allow update: if false;
+      allow delete: if platformAdmin() || projectOwner(resource.data.projectId);
+    }
 
-      match /revisions/{revisionId} {
-        allow read: if true;
-        allow update: if false;
-        allow delete: if canWrite() && !existsAfter(
-          /databases/$(database)/documents/documents/$(documentId)
-        );
-        allow create: if canWrite()
-          && request.resource.data.keys().hasOnly([
-            'path',
-            'body',
-            'version',
-            'lastReviewed',
-            'createdAt'
+    match /projects/{projectId} {
+      function validCreate() {
+        return request.resource.data.keys().hasOnly([
+            'name', 'slug', 'description', 'ownerId', 'status', 'template',
+            'documentCount', 'createdAt', 'updatedAt', 'archivedAt'
           ])
-          && request.resource.data.path
-            == get(/databases/$(database)/documents/documents/$(documentId)).data.path
-          && request.resource.data.body
-            == get(/databases/$(database)/documents/documents/$(documentId)).data.body
-          && request.resource.data.version
-            == get(/databases/$(database)/documents/documents/$(documentId)).data.version
-          && request.resource.data.lastReviewed
-            == get(/databases/$(database)/documents/documents/$(documentId)).data.lastReviewed
+          && request.resource.data.name is string
+          && request.resource.data.name.size() > 0
+          && request.resource.data.name.size() <= 100
+          && validSlug(request.resource.data.slug)
+          && request.resource.data.description is string
+          && request.resource.data.description.size() <= 300
+          && request.resource.data.ownerId == request.auth.uid
+          && request.resource.data.status == 'active'
+          && request.resource.data.template == 'game-design-v1'
+          && request.resource.data.documentCount == 25
           && request.resource.data.createdAt == request.time
-          && getAfter(/databases/$(database)/documents/documents/$(documentId)).data.version
-            == request.resource.data.version + 1;
+          && request.resource.data.updatedAt == request.time
+          && request.resource.data.archivedAt == null;
+      }
+
+      allow get: if resource.data.status == 'active' || platformAdmin();
+      allow list: if resource.data.status == 'active' || platformAdmin();
+      allow create: if platformAdmin() && validCreate();
+      allow delete: if false;
+      allow update: if (
+          canManage(projectId)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'name', 'slug', 'description', 'ownerId', 'status', 'documentCount',
+            'updatedAt', 'archivedAt'
+          ])
+        || canEdit(projectId)
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['documentCount', 'updatedAt'])
+        )
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 100
+        && validSlug(request.resource.data.slug)
+        && request.resource.data.description is string
+        && request.resource.data.description.size() <= 300
+        && request.resource.data.documentCount >= 0
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.status in ['active', 'archived']
+        && (
+          resource.data.status != 'archived'
+          || request.resource.data.status != 'active'
+          || platformAdmin()
+        )
+        && (
+          request.resource.data.ownerId == resource.data.ownerId
+          || getAfter(
+            /databases/$(database)/documents/projects/$(projectId)/members/$(request.resource.data.ownerId)
+          ).data.role == 'owner'
+        );
+
+      match /members/{userId} {
+        allow read: if platformAdmin()
+          || (signedIn() && request.auth.uid == userId)
+          || projectOwner(projectId);
+        allow create, update: if canManage(projectId)
+          && request.resource.data.keys().hasOnly(['role', 'addedAt'])
+          && request.resource.data.role in ['owner', 'editor']
+          && request.resource.data.addedAt == request.time;
+        allow delete: if canManage(projectId)
+          && resource.data.role == 'editor';
+      }
+
+      match /documents/{documentId} {
+        function validMetadata(data) {
+          return data.path is string
+            && data.path.size() > 3
+            && data.path.size() <= 500
+            && data.path.matches('^.+\\.md$')
+            && data.body is string
+            && data.body.size() > 0
+            && data.body.size() <= 512000
+            && data.status in ['planned', 'draft', 'review', 'approved']
+            && data.summary is string
+            && data.summary.size() <= 500
+            && data.related is list
+            && data.order is int
+            && data.order >= 0
+            && validDate(data.lastReviewed);
+        }
+
+        function validDocumentCreate() {
+          return request.resource.data.keys().hasOnly([
+              'path', 'body', 'status', 'summary', 'related', 'order', 'version',
+              'lastReviewed', 'createdAt', 'updatedAt'
+            ])
+            && validMetadata(request.resource.data)
+            && request.resource.data.version == 1
+            && request.resource.data.createdAt == request.time
+            && request.resource.data.updatedAt == request.time;
+        }
+
+        function validDocumentUpdate() {
+          return request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['body', 'version', 'lastReviewed', 'updatedAt'])
+            && validMetadata(request.resource.data)
+            && request.resource.data.path == resource.data.path
+            && request.resource.data.createdAt == resource.data.createdAt
+            && request.resource.data.version == resource.data.version + 1
+            && request.resource.data.updatedAt == request.time
+            && existsAfter(
+              /databases/$(database)/documents/projects/$(projectId)/documents/$(documentId)/revisions/$(resource.data.version)
+            );
+        }
+
+        allow read: if activeProject(projectId) || platformAdmin();
+        allow create: if canEdit(projectId) && validDocumentCreate();
+        allow delete: if canEdit(projectId);
+        allow update: if canEdit(projectId) && validDocumentUpdate();
+
+        match /revisions/{revisionId} {
+          allow read: if activeProject(projectId) || platformAdmin();
+          allow update: if false;
+          allow delete: if canEdit(projectId) && !existsAfter(
+            /databases/$(database)/documents/projects/$(projectId)/documents/$(documentId)
+          );
+          allow create: if canEdit(projectId)
+            && request.resource.data.keys().hasOnly([
+              'path', 'body', 'version', 'lastReviewed', 'createdAt'
+            ])
+            && request.resource.data.path
+              == get(/databases/$(database)/documents/projects/$(projectId)/documents/$(documentId)).data.path
+            && request.resource.data.body
+              == get(/databases/$(database)/documents/projects/$(projectId)/documents/$(documentId)).data.body
+            && request.resource.data.version
+              == get(/databases/$(database)/documents/projects/$(projectId)/documents/$(documentId)).data.version
+            && request.resource.data.lastReviewed
+              == get(/databases/$(database)/documents/projects/$(projectId)/documents/$(documentId)).data.lastReviewed
+            && request.resource.data.createdAt == request.time
+            && getAfter(/databases/$(database)/documents/projects/$(projectId)/documents/$(documentId)).data.version
+              == request.resource.data.version + 1;
+        }
       }
     }
   }

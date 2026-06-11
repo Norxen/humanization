@@ -1,0 +1,84 @@
+<app-top-navbar
+  [theme]="theme.theme()"
+  [userEmail]="auth.user()?.email ?? null"
+  [authReady]="auth.ready()"
+  [canChangePassword]="auth.canChangePassword()"
+  projectName="Project Library"
+  (themeToggle)="theme.toggle()"
+  (login)="loginOpen.set(true)"
+  (passwordChange)="passwordOpen.set(true)"
+  (logout)="logout()"
+/>
+
+<main class="lobby">
+  @if (routeError(); as error) {
+    <div class="route-error" role="alert">{{ error }}</div>
+  }
+  <header class="lobby-hero">
+    <div>
+      <span class="eyebrow">Manuscript workspace</span>
+      <h1>Choose a project</h1>
+      <p>Explore public game-design knowledge bases or continue managing your own work.</p>
+    </div>
+    @if (projects.canCreate()) {
+      <div class="hero-actions">
+        <button class="secondary" type="button" (click)="showArchived.set(!showArchived())">
+          {{ showArchived() ? 'Active projects' : 'Archived' }}
+        </button>
+        <button class="primary" type="button" (click)="createOpen.set(true)">New project</button>
+      </div>
+    }
+  </header>
+
+  @if (projects.error(); as error) {
+    <section class="empty-state"><strong>Unable to load projects</strong><p>{{ error }}</p></section>
+  } @else {
+    @let visibleProjects = showArchived() ? projects.archivedProjects() : projects.projects();
+    <section class="project-grid" aria-label="Projects">
+      @for (project of visibleProjects; track project.id) {
+        <article class="project-card" (click)="project.status === 'active' && open(project.id, project.slug)">
+          <div class="card-top">
+            <span class="project-mark">{{ project.name.slice(0, 1).toUpperCase() }}</span>
+            <span class="visibility">{{ project.status === 'active' ? 'Public' : 'Archived' }}</span>
+          </div>
+          <h2>{{ project.name }}</h2>
+          <p>{{ project.description || 'A game-design knowledge base.' }}</p>
+          <footer>
+            <span>{{ project.documentCount }} documents</span>
+            <span>{{ projects.roles()[project.id] ?? 'Public reader' }}</span>
+          </footer>
+          @if (project.status === 'archived') {
+            <button type="button" class="restore" (click)="$event.stopPropagation(); projects.restore(project)">
+              Restore project
+            </button>
+          }
+        </article>
+      } @empty {
+        <section class="empty-state">
+          <strong>{{ showArchived() ? 'No archived projects' : 'No projects yet' }}</strong>
+          <p>{{ projects.canCreate() ? 'Create the first project to initialize its documentation workspace.' : 'Check back after an administrator creates a project.' }}</p>
+        </section>
+      }
+    </section>
+  }
+</main>
+
+@if (createOpen()) {
+  <div class="modal-backdrop" (click)="createOpen.set(false)">
+    <form class="project-modal" (click)="$event.stopPropagation()" (submit)="$event.preventDefault(); create(name.value, slug.value, description.value)">
+      <span class="eyebrow">New knowledge base</span>
+      <h2>Create project</h2>
+      <label>Name<input #name required maxlength="100"></label>
+      <label>URL slug<input #slug required minlength="3" maxlength="80"></label>
+      <label>Description<textarea #description maxlength="300"></textarea></label>
+      @if (createError(); as error) { <p class="form-error">{{ error }}</p> }
+      <div class="modal-actions">
+        <button type="button" class="secondary" (click)="createOpen.set(false)">Cancel</button>
+        <button type="submit" class="primary" [disabled]="creating()">{{ creating() ? 'Creating...' : 'Create project' }}</button>
+      </div>
+    </form>
+  </div>
+}
+
+@if (loginOpen()) { <app-login-dialog (closed)="loginOpen.set(false)" /> }
+@if (passwordOpen()) { <app-change-password-dialog (closed)="passwordOpen.set(false)" /> }

@@ -41,6 +41,7 @@ export class DocumentEditor implements OnInit, OnDestroy {
 
   readonly document = input.required<LoadedDocument>();
   readonly pages = input.required<DocumentDescriptor[]>();
+  readonly projectId = input.required<string>();
   readonly cancelled = output<void>();
   readonly saved = output<LoadedDocument>();
   readonly dirtyChanged = output<boolean>();
@@ -258,18 +259,19 @@ export class DocumentEditor implements OnInit, OnDestroy {
   }
 
   private draftKey(): string {
-    return `manuscript-draft:${this.document().descriptor.path}`;
+    return `manuscript-draft:${this.projectId()}:${this.document().descriptor.path}`;
   }
 
   private readDraft(path: string): LocalDraft | null {
-    const value = localStorage.getItem(`manuscript-draft:${path}`);
+    const key = `manuscript-draft:${this.projectId()}:${path}`;
+    const value = localStorage.getItem(key);
     if (!value) {
       return null;
     }
     try {
       return JSON.parse(value) as LocalDraft;
     } catch {
-      localStorage.removeItem(`manuscript-draft:${path}`);
+      localStorage.removeItem(key);
       return null;
     }
   }

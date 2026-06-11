@@ -8,7 +8,7 @@ Game-design documents live in `front/public/docs/game-design`.
 2. Add it to `docs.navigation.json` in the intended reading order.
 3. Add or update related-document paths.
 4. Run `npm run docs:generate` from `front`.
-5. Seed Firestore when the repository snapshot should replace runtime content.
+5. Run the project migration when the original repository snapshot should initialize a new Firebase environment.
 6. Run `npm test` and `npm run test:rules` before pushing.
 
 ## Filenames and Structure
@@ -55,6 +55,6 @@ Cross-system unresolved questions belong in `Reference/Open Questions.md`. Accep
 
 ## Application Changes
 
-The Angular app is in `front/src`. Preserve static GitHub Pages hosting, public document reads, Firebase-authenticated writes, Firestore runtime loading, local draft recovery, version-conflict protection, and App Check support. Test user-visible behavior in `front/src/app/app.spec.ts`.
+The Angular app is in `front/src`. Preserve static GitHub Pages hosting, the public project lobby, public reads for active projects, project-scoped Firebase authorization, local draft recovery, version-conflict protection, and App Check support. Test user-visible behavior in `front/src/app/app.spec.ts`.
 
 Runtime page creation is supported from any tree entry. A new child uses the selected page name as its directory, and nodes automatically render as folders while they have children. Leaf pages can be deleted after confirmation; parents must have their children removed first. Rename, move, and metadata editing are not yet supported.

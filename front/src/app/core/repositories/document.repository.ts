@@ -2,11 +2,21 @@ import { InjectionToken } from '@angular/core';
 import { StoredDocument } from '../models/document-page.model';
 
 export abstract class DocumentRepository {
-  abstract list(): Promise<StoredDocument[]>;
-  abstract load(path: string): Promise<StoredDocument>;
-  abstract create(path: string, body: string): Promise<StoredDocument>;
-  abstract delete(path: string): Promise<void>;
-  abstract save(path: string, body: string, expectedVersion: number): Promise<StoredDocument>;
+  abstract list(projectId: string): Promise<StoredDocument[]>;
+  abstract load(projectId: string, path: string): Promise<StoredDocument>;
+  abstract create(
+    projectId: string,
+    path: string,
+    body: string,
+    order: number
+  ): Promise<StoredDocument>;
+  abstract delete(projectId: string, path: string): Promise<void>;
+  abstract save(
+    projectId: string,
+    path: string,
+    body: string,
+    expectedVersion: number
+  ): Promise<StoredDocument>;
 }
 
 export const DOCUMENT_REPOSITORY = new InjectionToken<DocumentRepository>(

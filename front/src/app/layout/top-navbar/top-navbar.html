@@ -10,10 +10,28 @@
 
   <div class="workspace-info">
     <span class="status-dot"></span>
-    <span>Roguelike Civilization Rebuilder</span>
+    @if (projectOptions().length > 1) {
+      <select
+        aria-label="Switch project"
+        [value]="activeProjectId()"
+        (change)="projectSelected.emit(projectOptions()[$any($event.target).selectedIndex])"
+      >
+        @for (project of projectOptions(); track project.id) {
+          <option [value]="project.id">{{ project.name }}</option>
+        }
+      </select>
+    } @else {
+      <span>{{ projectName() }}</span>
+    }
   </div>
 
   <div class="meta">
+    @if (showBack()) {
+      <button class="auth-button" type="button" (click)="back.emit()">Projects</button>
+    }
+    @if (canManageProject()) {
+      <button class="auth-button" type="button" (click)="projectSettings.emit()">Settings</button>
+    }
     @if (userEmail(); as email) {
       <span class="user-email" [title]="email">{{ email }}</span>
       @if (canChangePassword()) {

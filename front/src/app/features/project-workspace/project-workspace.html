@@ -1,0 +1,125 @@
+<app-top-navbar
+  [theme]="themeService.theme()"
+  [userEmail]="auth.user()?.email ?? null"
+  [authReady]="auth.ready()"
+  [canChangePassword]="auth.canChangePassword()"
+  [projectName]="projects.activeProject()?.name ?? 'Loading project'"
+  [showBack]="true"
+  [canManageProject]="projects.canManageActive()"
+  [projectOptions]="projects.projects()"
+  [activeProjectId]="projectId()"
+  (menuToggle)="sidebarOpen.set(!sidebarOpen())"
+  (themeToggle)="themeService.toggle()"
+  (back)="router.navigate(['/'])"
+  (projectSettings)="settingsOpen.set(true)"
+  (projectSelected)="switchProject($event)"
+  (login)="loginOpen.set(true)"
+  (passwordChange)="passwordChangeOpen.set(true)"
+  (logout)="logout()"
+/>
+
+<div class="workspace">
+  <aside class="sidebar" [class.open]="sidebarOpen()">
+    <app-file-tree
+      [nodes]="store.fileTree()"
+      [activePageIndex]="store.activePageIndex()"
+      [fileCount]="store.pages().length"
+      [canManage]="projects.canEditActive()"
+      (pageSelected)="selectPage($event)"
+      (documentCreateRequested)="createDocument($event)"
+      (documentDeleteRequested)="requestDeleteDocument($event)"
+    />
+  </aside>
+  @if (sidebarOpen()) {
+    <button class="sidebar-backdrop" type="button" aria-label="Close file tree" (click)="sidebarOpen.set(false)"></button>
+  }
+  <main>
+    @if (store.error(); as error) {
+      <div class="state-message"><strong>Unable to load documentation</strong><p>{{ error }}</p></div>
+    } @else if (store.activeDocument(); as document) {
+      @if (editing()) {
+        <app-document-editor
+          [projectId]="projectId()"
+          [document]="document"
+          [pages]="store.pages()"
+          (dirtyChanged)="editorDirty.set($event)"
+          (cancelled)="finishEditing()"
+          (saved)="finishEditing()"
+        />
+      } @else {
+        <app-markdown-viewer
+          [document]="document"
+          [previousPage]="store.previousPage()"
+          [nextPage]="store.nextPage()"
+          [canEdit]="projects.canEditActive()"
+          (documentSelected)="selectPath($event)"
+          (edit)="editing.set(true)"
+          (previous)="goPrevious()"
+          (next)="goNext()"
+        />
+      }
+      @if (store.loading()) { <div class="loading-bar"></div> }
+    } @else {
+      <div class="state-message loading"><span class="spinner"></span><p>Loading documentation...</p></div>
+    }
+  </main>
+</div>
+
+@if (deleteTarget(); as target) {
+  <div class="modal-backdrop" (click)="!deleting() && deleteTarget.set(null)">
+    <section class="dialog" role="alertdialog" (click)="$event.stopPropagation()">
+      <span class="eyebrow danger">Delete document</span>
+      <h2>Delete {{ target.displayName }}?</h2>
+      <p>{{ target.children?.length ? 'Delete its children first.' : 'This permanently removes the page and its revision history.' }}</p>
+      @if (deleteError(); as error) { <p class="form-error">{{ error }}</p> }
+      <div class="modal-actions">
+        <button type="button" (click)="deleteTarget.set(null)">Cancel</button>
+        <button class="danger-button" type="button" [disabled]="deleting() || !!target.children?.length" (click)="confirmDeleteDocument()">Delete</button>
+      </div>
+    </section>
+  </div>
+}
+
+@if (settingsOpen(); as open) {
+  @if (projects.activeProject(); as project) {
+    <div class="modal-backdrop" (click)="settingsOpen.set(false)">
+      <section class="dialog settings" (click)="$event.stopPropagation()">
+        <span class="eyebrow">Project administration</span>
+        <h2>Project settings</h2>
+        <form (submit)="$event.preventDefault(); updateProject(name.value, slug.value, description.value)">
+          <label>Name<input #name [value]="project.name" required></label>
+          <label>URL slug<input #slug [value]="project.slug" required></label>
+          <label>Description<textarea #description [value]="project.description"></textarea></label>
+          <button class="primary" type="submit">Save project</button>
+        </form>
+        <div class="settings-section">
+          <h3>Members</h3>
+          @for (member of projects.members(); track member.userId) {
+            <div class="member-row"><code>{{ member.userId }}</code><span>{{ member.role }}</span>
+              @if (member.role === 'editor') { <button type="button" (click)="projects.removeEditor(member.userId)">Remove</button> }
+            </div>
+          }
+          <form class="inline-form" (submit)="$event.preventDefault(); addEditor(editorUid.value); editorUid.value=''">
+            <input #editorUid placeholder="Firebase user UID" required>
+            <button type="submit">Add editor</button>
+          </form>
+        </div>
+        <div class="settings-section">
+          <h3>Ownership</h3>
+          <form class="inline-form" (submit)="$event.preventDefault(); transferOwnership(ownerUid.value)">
+            <input #ownerUid placeholder="New owner Firebase UID" required>
+            <button type="submit">Transfer</button>
+          </form>
+        </div>
+        @if (settingsError(); as error) { <p class="form-error">{{ error }}</p> }
+        <div class="modal-actions split">
+          <button class="danger-button" type="button" (click)="archiveProject()">Archive project</button>
+          <button type="button" (click)="settingsOpen.set(false)">Close</button>
+        </div>
+      </section>
+    </div>
+  }
+}
+
+@if (loginOpen()) { <app-login-dialog (closed)="loginOpen.set(false)" /> }
+@if (passwordChangeOpen()) { <app-change-password-dialog (closed)="passwordChangeOpen.set(false)" /> }

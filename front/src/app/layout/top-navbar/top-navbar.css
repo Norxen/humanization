@@ -22,6 +22,11 @@
   color: var(--muted); background: var(--surface-raised); font-size: 9px;
 }
 .workspace-info { justify-content: center; gap: 9px; color: #aaa1b3; font-size: 11px; }
+.workspace-info select {
+  max-width: 280px; border: 0; outline: none; color: inherit;
+  background: transparent; font: inherit; cursor: pointer;
+}
+.workspace-info option { color: var(--ink); background: var(--surface); }
 .status-dot {
   width: 6px; height: 6px; border-radius: 50%; background: #b7f36b;
   box-shadow: 0 0 0 4px rgba(183, 243, 107, .08), 0 0 12px rgba(183, 243, 107, .35);

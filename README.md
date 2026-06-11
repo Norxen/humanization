@@ -1,14 +1,14 @@
 # Humanization
 
-Humanization contains **Manuscript**, an Angular and Firestore editor for the game-design knowledge base of **Roguelike Civilization Rebuilder** (working title).
+Humanization contains **Manuscript**, an Angular and Firestore platform for public game-design knowledge bases.
 
 Live site: <https://norxen.github.io/humanization/>
 
 ## Repository Layout
 
 - `front/` contains the Angular application.
-- `front/public/docs/game-design/` contains Markdown seed and export snapshots.
-- `front/public/docs/game-design/docs.navigation.json` defines the file tree and reading order.
+- `front/public/docs/game-design/` contains the seed/export snapshot for the original project.
+- Firestore projects own their runtime document metadata, tree order, members, and revisions.
 - `front/scripts/generate-docs-manifest.mjs` validates documents and generates the runtime manifest.
 - Firestore stores authoritative runtime document bodies and immutable revisions.
 - `.github/workflows/deploy-pages.yml` builds and deploys the site to GitHub Pages.
@@ -27,7 +27,7 @@ In a second terminal:
 
 ```bash
 cd front
-npm run firebase:seed:emulator
+npm run firebase:migrate:projects:emulator
 npm start
 ```
 
@@ -48,15 +48,16 @@ npm run build
 
 1. Create a Firebase project and Firestore database.
 2. Enable Firebase Authentication's Email/Password and Google providers, then create or sign in editor accounts.
-3. For each authorized account, create `editors/{uid}` in Firestore using the account UID as the document ID.
+3. Create `platformAdmins/{uid}` for accounts allowed to create and administer projects.
 4. Add `norxen.github.io` to Authentication authorized domains.
 5. Deploy `front/firestore.rules` and `front/firestore.indexes.json`.
-6. Authenticate Application Default Credentials and seed the current repository documents:
+6. Authenticate Application Default Credentials and migrate the existing global documents into the first project:
 
 ```bash
 cd front
 gcloud auth application-default login
-npm run firebase:seed -- --project=<firebase-project-id>
+npm run firebase:migrate:projects -- --project=<firebase-project-id> --owner=<firebase-user-uid> --dry-run
+npm run firebase:migrate:projects -- --project=<firebase-project-id> --owner=<firebase-user-uid>
 ```
 
 7. Configure `SECRET_API_KEY_FIREBASE` as a GitHub Actions repository secret. The workflow maps it to the build-time `FIREBASE_API_KEY` environment variable.
@@ -72,7 +73,7 @@ npm run firebase:seed -- --project=<firebase-project-id>
 
 9. Register the Pages domain in Firebase App Check, verify traffic, and then enforce App Check for Firestore.
 
-Reads are public. Creating, editing, deleting, and revision writes require a signed-in Firebase Authentication user whose UID exists in the protected `editors` collection. Password users can change their password after reauthentication; Google-only users manage passwords through Google.
+Active projects are public. Platform admins create projects. Owners and project editors manage documents, while archived projects are visible only to platform admins.
 
 ## Publishing
 
