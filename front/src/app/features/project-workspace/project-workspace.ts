@@ -187,6 +187,18 @@ export class ProjectWorkspace implements OnInit {
     await this.projects.transferOwnership(userId);
   }
 
+  closeDeleteFromBackdrop(event: PointerEvent): void {
+    if (event.target === event.currentTarget && !this.deleting()) {
+      this.deleteTarget.set(null);
+    }
+  }
+
+  closeSettingsFromBackdrop(event: PointerEvent): void {
+    if (event.target === event.currentTarget) {
+      this.settingsOpen.set(false);
+    }
+  }
+
   private canLeaveEditor(): boolean {
     if (!this.editing()) return true;
     if (this.editorDirty() && !window.confirm('Leave Edit mode? Your unsaved local draft will be preserved.')) {

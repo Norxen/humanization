@@ -1,10 +1,9 @@
-<div class="login-backdrop" (click)="closed.emit()">
+<div class="login-backdrop" (pointerdown)="closeFromBackdrop($event)">
   <section
     class="login-dialog"
     role="dialog"
     aria-modal="true"
     aria-labelledby="login-title"
-    (click)="$event.stopPropagation()"
   >
     <button class="close-login" type="button" aria-label="Close login" (click)="closed.emit()">
       &times;
@@ -24,6 +23,9 @@
     </button>
 
     <div class="login-divider"><span>or use email</span></div>
+    <p class="login-hint">
+      Google-only accounts can add email/password access after signing in with Google.
+    </p>
 
     <form (submit)="submit($event)">
       <label>

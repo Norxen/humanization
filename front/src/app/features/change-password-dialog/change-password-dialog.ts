@@ -1,4 +1,4 @@
-import { Component, inject, output, signal } from '@angular/core';
+import { Component, inject, input, output, signal } from '@angular/core';
 import { AuthService } from '../../core/services/auth.service';
 
 @Component({
@@ -10,11 +10,18 @@ export class ChangePasswordDialog {
   private readonly auth = inject(AuthService);
 
   readonly closed = output<void>();
+  readonly setMode = input(false);
   readonly currentPassword = signal('');
   readonly newPassword = signal('');
   readonly confirmation = signal('');
   readonly submitting = signal(false);
   readonly error = signal<string | null>(null);
+
+  closeFromBackdrop(event: PointerEvent): void {
+    if (event.target === event.currentTarget) {
+      this.closed.emit();
+    }
+  }
 
   async submit(event: Event): Promise<void> {
     event.preventDefault();
@@ -30,11 +37,19 @@ export class ChangePasswordDialog {
     this.submitting.set(true);
     this.error.set(null);
     try {
-      await this.auth.changePassword(this.currentPassword(), this.newPassword());
+      if (this.setMode()) {
+        await this.auth.setPassword(this.newPassword());
+      } else {
+        await this.auth.changePassword(this.currentPassword(), this.newPassword());
+      }
       this.closed.emit();
     } catch (error) {
       this.error.set(
-        error instanceof Error ? error.message : 'Unable to change the password.'
+        error instanceof Error
+          ? error.message
+          : this.setMode()
+            ? 'Unable to set the password.'
+            : 'Unable to change the password.'
       );
     } finally {
       this.submitting.set(false);

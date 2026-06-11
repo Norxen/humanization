@@ -38,6 +38,10 @@
         <button class="auth-button" type="button" (click)="passwordChange.emit()">
           Password
         </button>
+      } @else if (canSetPassword()) {
+        <button class="auth-button" type="button" (click)="passwordChange.emit()">
+          Set password
+        </button>
       }
       <button class="auth-button" type="button" (click)="logout.emit()">Logout</button>
     } @else {

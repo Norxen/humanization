@@ -3,6 +3,7 @@
   [userEmail]="auth.user()?.email ?? null"
   [authReady]="auth.ready()"
   [canChangePassword]="auth.canChangePassword()"
+  [canSetPassword]="auth.canSetPassword()"
   projectName="Project Library"
   (themeToggle)="theme.toggle()"
   (login)="loginOpen.set(true)"
@@ -64,8 +65,8 @@
 </main>
 
 @if (createOpen()) {
-  <div class="modal-backdrop" (click)="createOpen.set(false)">
-    <form class="project-modal" (click)="$event.stopPropagation()" (submit)="$event.preventDefault(); create(name.value, slug.value, description.value)">
+  <div class="modal-backdrop" (pointerdown)="closeCreateFromBackdrop($event)">
+    <form class="project-modal" (submit)="$event.preventDefault(); create(name.value, slug.value, description.value)">
       <span class="eyebrow">New knowledge base</span>
       <h2>Create project</h2>
       <label>Name<input #name required maxlength="100"></label>
@@ -81,4 +82,9 @@
 }
 
 @if (loginOpen()) { <app-login-dialog (closed)="loginOpen.set(false)" /> }
-@if (passwordOpen()) { <app-change-password-dialog (closed)="passwordOpen.set(false)" /> }
+@if (passwordOpen()) {
+  <app-change-password-dialog
+    [setMode]="auth.canSetPassword()"
+    (closed)="passwordOpen.set(false)"
+  />
+}

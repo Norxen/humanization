@@ -55,4 +55,10 @@ export class ProjectLobby implements OnInit {
     await this.auth.logout();
     await this.projects.loadLobby();
   }
+
+  closeCreateFromBackdrop(event: PointerEvent): void {
+    if (event.target === event.currentTarget) {
+      this.createOpen.set(false);
+    }
+  }
 }

@@ -12,6 +12,7 @@ export class TopNavbar {
   readonly userEmail = input<string | null>(null);
   readonly authReady = input(false);
   readonly canChangePassword = input(false);
+  readonly canSetPassword = input(false);
   readonly projectName = input('Projects');
   readonly showBack = input(false);
   readonly canManageProject = input(false);

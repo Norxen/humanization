@@ -15,6 +15,12 @@ export class LoginDialog {
   readonly submitting = signal(false);
   readonly error = signal<string | null>(null);
 
+  closeFromBackdrop(event: PointerEvent): void {
+    if (event.target === event.currentTarget) {
+      this.closed.emit();
+    }
+  }
+
   async submit(event: Event): Promise<void> {
     event.preventDefault();
     if (!this.email().trim() || !this.password()) {

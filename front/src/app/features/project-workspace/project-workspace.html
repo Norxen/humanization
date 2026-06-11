@@ -3,6 +3,7 @@
   [userEmail]="auth.user()?.email ?? null"
   [authReady]="auth.ready()"
   [canChangePassword]="auth.canChangePassword()"
+  [canSetPassword]="auth.canSetPassword()"
   [projectName]="projects.activeProject()?.name ?? 'Loading project'"
   [showBack]="true"
   [canManageProject]="projects.canManageActive()"
@@ -66,8 +67,8 @@
 </div>
 
 @if (deleteTarget(); as target) {
-  <div class="modal-backdrop" (click)="!deleting() && deleteTarget.set(null)">
-    <section class="dialog" role="alertdialog" (click)="$event.stopPropagation()">
+  <div class="modal-backdrop" (pointerdown)="closeDeleteFromBackdrop($event)">
+    <section class="dialog" role="alertdialog">
       <span class="eyebrow danger">Delete document</span>
       <h2>Delete {{ target.displayName }}?</h2>
       <p>{{ target.children?.length ? 'Delete its children first.' : 'This permanently removes the page and its revision history.' }}</p>
@@ -82,8 +83,8 @@
 
 @if (settingsOpen(); as open) {
   @if (projects.activeProject(); as project) {
-    <div class="modal-backdrop" (click)="settingsOpen.set(false)">
-      <section class="dialog settings" (click)="$event.stopPropagation()">
+    <div class="modal-backdrop" (pointerdown)="closeSettingsFromBackdrop($event)">
+      <section class="dialog settings">
         <span class="eyebrow">Project administration</span>
         <h2>Project settings</h2>
         <form (submit)="$event.preventDefault(); updateProject(name.value, slug.value, description.value)">
@@ -122,4 +123,9 @@
 }
 
 @if (loginOpen()) { <app-login-dialog (closed)="loginOpen.set(false)" /> }
-@if (passwordChangeOpen()) { <app-change-password-dialog (closed)="passwordChangeOpen.set(false)" /> }
+@if (passwordChangeOpen()) {
+  <app-change-password-dialog
+    [setMode]="auth.canSetPassword()"
+    (closed)="passwordChangeOpen.set(false)"
+  />
+}

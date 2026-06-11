@@ -43,12 +43,25 @@ class FakeAuthService {
     providerData: [{ providerId: 'password' }]
   });
   readonly isPlatformAdmin = signal(true);
-  readonly canChangePassword = computed(() => true);
+  readonly canChangePassword = computed(
+    () => this.user()?.providerData.some((provider: any) => provider.providerId === 'password') ?? false
+  );
+  readonly canSetPassword = computed(
+    () => Boolean(this.user()?.email) && !this.canChangePassword()
+  );
   readonly ready = signal(true);
   initialize(): Promise<any> { return Promise.resolve({}); }
   login(): Promise<void> { return Promise.resolve(); }
   loginWithGoogle(): Promise<void> { return Promise.resolve(); }
   changePassword(): Promise<void> { return Promise.resolve(); }
+  setPassword(): Promise<void> {
+    const user = this.user();
+    this.user.set({
+      ...user,
+      providerData: [...user.providerData, { providerId: 'password' }]
+    });
+    return Promise.resolve();
+  }
   logout(): Promise<void> { this.user.set(null); return Promise.resolve(); }
 }
 
@@ -157,16 +170,18 @@ class MemoryDocumentRepository extends DocumentRepository {
 describe('multi-project Manuscript', () => {
   let projectRepository: MemoryProjectRepository;
   let documentRepository: MemoryDocumentRepository;
+  let auth: FakeAuthService;
 
   beforeEach(async () => {
     localStorage.clear();
     projectRepository = new MemoryProjectRepository();
     documentRepository = new MemoryDocumentRepository();
+    auth = new FakeAuthService();
     await TestBed.configureTestingModule({
       imports: [App],
       providers: [
         provideRouter(routes),
-        { provide: AuthService, useValue: new FakeAuthService() },
+        { provide: AuthService, useValue: auth },
         { provide: PROJECT_REPOSITORY, useValue: projectRepository },
         { provide: DOCUMENT_REPOSITORY, useValue: documentRepository }
       ]
@@ -185,6 +200,68 @@ describe('multi-project Manuscript', () => {
 
     expect(fixture.nativeElement.querySelector('h1')?.textContent).toContain('Choose a project');
     expect(fixture.nativeElement.querySelector('.project-card')?.textContent).toContain('Example Game');
+  });
+
+  it('closes login on backdrop pointer-down but not on dialog pointer-down', async () => {
+    auth.user.set(null);
+    const fixture = TestBed.createComponent(App);
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/');
+    fixture.detectChanges();
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect([...fixture.nativeElement.querySelectorAll('.auth-button')]
+        .some((button: HTMLButtonElement) => button.textContent?.trim() === 'Login')).toBe(true);
+    });
+
+    const loginButton = [...fixture.nativeElement.querySelectorAll('.auth-button')]
+      .find((button: HTMLButtonElement) => button.textContent?.trim() === 'Login') as HTMLButtonElement;
+    loginButton.click();
+    fixture.detectChanges();
+    const dialog = fixture.nativeElement.querySelector('.login-dialog') as HTMLElement;
+    const backdrop = fixture.nativeElement.querySelector('.login-backdrop') as HTMLElement;
+    dialog.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.login-dialog')).toBeTruthy();
+
+    backdrop.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.login-dialog')).toBeFalsy();
+  });
+
+  it('allows a Google-only account to add password login', async () => {
+    auth.user.set({
+      uid: 'admin-user',
+      email: 'admin@example.com',
+      providerData: [{ providerId: 'google.com' }]
+    });
+    const fixture = TestBed.createComponent(App);
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/');
+    fixture.detectChanges();
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(fixture.nativeElement.textContent).toContain('Set password');
+    });
+
+    const setPasswordButton = [...fixture.nativeElement.querySelectorAll('button')]
+      .find((button: HTMLButtonElement) => button.textContent?.trim() === 'Set password') as HTMLButtonElement;
+    setPasswordButton.click();
+    fixture.detectChanges();
+    const inputs = fixture.nativeElement.querySelectorAll('.login-dialog input');
+    expect(inputs).toHaveLength(2);
+    for (const input of inputs) {
+      input.value = 'secure-password';
+      input.dispatchEvent(new Event('input'));
+    }
+    (fixture.nativeElement.querySelector('.login-dialog form') as HTMLFormElement)
+      .dispatchEvent(new Event('submit'));
+
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(auth.canChangePassword()).toBe(true);
+      expect(fixture.nativeElement.querySelector('.login-dialog')).toBeFalsy();
+    });
   });
 
   it('opens a project workspace with its Firestore document tree', async () => {

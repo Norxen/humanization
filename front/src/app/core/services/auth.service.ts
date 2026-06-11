@@ -12,6 +12,9 @@ export class AuthService {
   readonly canChangePassword = computed(
     () => this.user()?.providerData.some((provider) => provider.providerId === 'password') ?? false
   );
+  readonly canSetPassword = computed(
+    () => Boolean(this.user()?.email) && !this.canChangePassword()
+  );
   readonly ready = signal(false);
   readonly error = signal<string | null>(null);
 
@@ -76,6 +79,43 @@ export class AuthService {
         throw new Error('Sign out and sign in again before changing the password.');
       }
       throw new Error('Unable to change the password.');
+    }
+  }
+
+  async setPassword(newPassword: string): Promise<void> {
+    const user = this.user();
+    if (!user?.email || !this.canSetPassword()) {
+      throw new Error('This account already has a password credential.');
+    }
+
+    try {
+      const { EmailAuthProvider, linkWithCredential } = await import('firebase/auth');
+      await linkWithCredential(
+        user,
+        EmailAuthProvider.credential(user.email, newPassword)
+      );
+      await user.reload();
+      this.user.set(null);
+      this.user.set(user);
+    } catch (error) {
+      const code =
+        typeof error === 'object' && error && 'code' in error
+          ? String(error.code)
+          : '';
+      if (code === 'auth/weak-password') {
+        throw new Error('The password does not meet Firebase requirements.');
+      }
+      if (
+        code === 'auth/provider-already-linked' ||
+        code === 'auth/email-already-in-use' ||
+        code === 'auth/credential-already-in-use'
+      ) {
+        throw new Error('This email already has a password credential.');
+      }
+      if (code === 'auth/requires-recent-login') {
+        throw new Error('Sign out and sign in with Google again before setting a password.');
+      }
+      throw new Error('Unable to set the password.');
     }
   }
 
