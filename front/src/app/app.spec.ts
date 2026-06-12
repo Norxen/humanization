@@ -210,12 +210,10 @@ describe('multi-project Manuscript', () => {
     fixture.detectChanges();
     await vi.waitFor(() => {
       fixture.detectChanges();
-      expect([...fixture.nativeElement.querySelectorAll('.auth-button')]
-        .some((button: HTMLButtonElement) => button.textContent?.trim() === 'Login')).toBe(true);
+      expect(fixture.nativeElement.querySelector('.login-button')?.textContent.trim()).toBe('Sign in');
     });
 
-    const loginButton = [...fixture.nativeElement.querySelectorAll('.auth-button')]
-      .find((button: HTMLButtonElement) => button.textContent?.trim() === 'Login') as HTMLButtonElement;
+    const loginButton = fixture.nativeElement.querySelector('.login-button') as HTMLButtonElement;
     loginButton.click();
     fixture.detectChanges();
     const dialog = fixture.nativeElement.querySelector('.login-dialog') as HTMLElement;
