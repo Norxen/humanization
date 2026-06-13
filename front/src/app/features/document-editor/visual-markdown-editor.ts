@@ -15,9 +15,12 @@ import { history } from '@milkdown/plugin-history';
 import {
   commonmark,
   createCodeBlockCommand,
+  insertHardbreakCommand,
   insertHrCommand,
+  insertImageCommand,
   toggleEmphasisCommand,
   toggleInlineCodeCommand,
+  toggleLinkCommand,
   toggleStrongCommand,
   turnIntoTextCommand,
   wrapInBlockquoteCommand,
@@ -25,7 +28,11 @@ import {
   wrapInHeadingCommand,
   wrapInOrderedListCommand
 } from '@milkdown/preset-commonmark';
-import { gfm } from '@milkdown/preset-gfm';
+import {
+  gfm,
+  insertTableCommand,
+  toggleStrikethroughCommand
+} from '@milkdown/preset-gfm';
 import { $prose, callCommand, replaceAll } from '@milkdown/utils';
 import { redo, undo } from '@milkdown/prose/history';
 import { Plugin, PluginKey } from '@milkdown/prose/state';
@@ -34,10 +41,10 @@ import { DocumentDescriptor } from '../../core/models/document-page.model';
 import { ProjectMembership } from '../../core/models/project.model';
 
 type ToolbarCommand =
-  | 'paragraph' | 'h2' | 'h3' | 'h4'
-  | 'bold' | 'italic' | 'bullet' | 'ordered'
-  | 'link' | 'inline-code' | 'code-block'
-  | 'quote' | 'rule' | 'undo' | 'redo';
+  | 'paragraph' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6'
+  | 'bold' | 'italic' | 'strike' | 'bullet' | 'ordered' | 'task'
+  | 'link' | 'image' | 'inline-code' | 'code-block'
+  | 'quote' | 'rule' | 'hardbreak' | 'table' | 'undo' | 'redo';
 
 interface CompletionItem {
   kind: 'document' | 'member';
@@ -210,17 +217,24 @@ export class VisualMarkdownEditor implements AfterViewInit, OnDestroy {
       h2: () => this.editor!.action(callCommand(wrapInHeadingCommand.key, 2)),
       h3: () => this.editor!.action(callCommand(wrapInHeadingCommand.key, 3)),
       h4: () => this.editor!.action(callCommand(wrapInHeadingCommand.key, 4)),
+      h5: () => this.editor!.action(callCommand(wrapInHeadingCommand.key, 5)),
+      h6: () => this.editor!.action(callCommand(wrapInHeadingCommand.key, 6)),
       bold: () => this.editor!.action(callCommand(toggleStrongCommand.key)),
       italic: () => this.editor!.action(callCommand(toggleEmphasisCommand.key)),
+      strike: () => this.editor!.action(callCommand(toggleStrikethroughCommand.key)),
       bullet: () => this.editor!.action(callCommand(wrapInBulletListCommand.key)),
       ordered: () => this.editor!.action(callCommand(wrapInOrderedListCommand.key)),
+      task: () => this.insertTaskItem(),
       'inline-code': () => this.editor!.action(callCommand(toggleInlineCodeCommand.key)),
       'code-block': () => this.editor!.action(callCommand(createCodeBlockCommand.key)),
       quote: () => this.editor!.action(callCommand(wrapInBlockquoteCommand.key)),
       rule: () => this.editor!.action(callCommand(insertHrCommand.key)),
+      hardbreak: () => this.editor!.action(callCommand(insertHardbreakCommand.key)),
+      table: () => this.editor!.action(callCommand(insertTableCommand.key, { row: 3, col: 3 })),
       undo: () => this.runHistory(undo),
       redo: () => this.runHistory(redo),
-      link: () => this.addLink()
+      link: () => this.addLink(),
+      image: () => this.addImage()
     };
     actions[command]();
     this.focus();
@@ -321,19 +335,34 @@ export class VisualMarkdownEditor implements AfterViewInit, OnDestroy {
     if (!this.editor) return;
     const href = window.prompt('Link URL or relative Markdown path:', '');
     if (!href) return;
+    this.editor.action(callCommand(toggleLinkCommand.key, { href }));
+  }
+
+  private addImage(): void {
+    if (!this.editor) return;
+    const src = window.prompt('Image URL:', '');
+    if (!src) return;
+    const alt = window.prompt('Alternative text:', '') ?? '';
+    this.editor.action(callCommand(insertImageCommand.key, { src, alt }));
+  }
+
+  private insertTaskItem(): void {
+    if (!this.editor) return;
+    this.editor.action(callCommand(wrapInBulletListCommand.key));
     this.editor.action((ctx) => {
       const view = ctx.get(editorViewCtx);
-      const mark = view.state.schema.marks['link'].create({ href });
-      const transaction = view.state.tr;
-      if (view.state.selection.empty) {
-        transaction.insertText(href);
+      const { $from } = view.state.selection;
+      for (let depth = $from.depth; depth > 0; depth -= 1) {
+        const node = $from.node(depth);
+        if (node.type.name !== 'list_item') continue;
+        view.dispatch(
+          view.state.tr.setNodeMarkup($from.before(depth), undefined, {
+            ...node.attrs,
+            checked: false
+          }).scrollIntoView()
+        );
+        break;
       }
-      transaction.addMark(
-        transaction.selection.from,
-        transaction.selection.to,
-        mark
-      );
-      view.dispatch(transaction.scrollIntoView());
     });
   }
 

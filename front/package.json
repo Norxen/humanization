@@ -8,6 +8,7 @@
     "start": "ng serve",
     "prebuild": "npm run docs:generate",
     "build": "ng build",
+    "postbuild": "node scripts/create-spa-fallback.mjs",
     "prewatch": "npm run docs:generate",
     "watch": "ng build --watch --configuration development",
     "pretest": "npm run docs:generate",

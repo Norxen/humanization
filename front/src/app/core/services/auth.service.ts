@@ -132,7 +132,6 @@ export class AuthService {
       import('firebase/auth')
     ]);
     const auth = authModule.getAuth(app);
-    await authModule.setPersistence(auth, authModule.browserLocalPersistence);
 
     if (
       config.emulator?.enabled &&
@@ -144,6 +143,8 @@ export class AuthService {
         { disableWarnings: true }
       );
     }
+
+    await authModule.setPersistence(auth, authModule.browserLocalPersistence);
 
     await new Promise<void>((resolve) => {
       let initialized = false;

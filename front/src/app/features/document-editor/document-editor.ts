@@ -129,6 +129,16 @@ export class DocumentEditor implements OnInit, OnDestroy {
       : this.visualEditor?.execute(command as never);
   }
 
+  preserveVisualSelection(event: MouseEvent): void {
+    if (
+      this.mode() === 'edit'
+      && event.target instanceof Element
+      && event.target.closest('button')
+    ) {
+      event.preventDefault();
+    }
+  }
+
   async saveDocument(): Promise<void> {
     if (!this.canSave()) {
       return;

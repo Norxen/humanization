@@ -143,15 +143,26 @@ export class SourceMarkdownEditor implements AfterViewInit, OnDestroy {
       h2: { from: line.from, to: line.to, insert: `## ${line.text.replace(/^#{1,6}\s+/, '')}` },
       h3: { from: line.from, to: line.to, insert: `### ${line.text.replace(/^#{1,6}\s+/, '')}` },
       h4: { from: line.from, to: line.to, insert: `#### ${line.text.replace(/^#{1,6}\s+/, '')}` },
+      h5: { from: line.from, to: line.to, insert: `##### ${line.text.replace(/^#{1,6}\s+/, '')}` },
+      h6: { from: line.from, to: line.to, insert: `###### ${line.text.replace(/^#{1,6}\s+/, '')}` },
       bold: this.wrap(selection.from, selection.to, selected, '**', '**', 'bold'),
       italic: this.wrap(selection.from, selection.to, selected, '*', '*', 'italic'),
+      strike: this.wrap(selection.from, selection.to, selected, '~~', '~~', 'text'),
       'inline-code': this.wrap(selection.from, selection.to, selected, '`', '`', 'code'),
       'code-block': this.wrap(selection.from, selection.to, selected, '```\n', '\n```', 'code'),
       quote: { from: line.from, to: line.to, insert: `> ${line.text}` },
       bullet: { from: line.from, to: line.to, insert: `- ${line.text}` },
       ordered: { from: line.from, to: line.to, insert: `1. ${line.text}` },
+      task: { from: line.from, to: line.to, insert: `- [ ] ${line.text}` },
       rule: { from: selection.from, to: selection.to, insert: '\n---\n' },
-      link: this.linkReplacement(selection.from, selection.to, selected)
+      hardbreak: { from: selection.from, to: selection.to, insert: '  \n' },
+      table: {
+        from: selection.from,
+        to: selection.to,
+        insert: '\n| Column 1 | Column 2 | Column 3 |\n| --- | --- | --- |\n|  |  |  |\n|  |  |  |\n'
+      },
+      link: this.linkReplacement(selection.from, selection.to, selected),
+      image: this.imageReplacement(selection.from, selection.to, selected)
     };
     const replacement = replacements[command];
     if (!replacement) return;
@@ -229,6 +240,17 @@ export class SourceMarkdownEditor implements AfterViewInit, OnDestroy {
       to,
       insert: href ? `[${label}](${href})` : label,
       cursor: href ? label.length + 1 : label.length
+    };
+  }
+
+  private imageReplacement(from: number, to: number, selected: string) {
+    const src = window.prompt('Image URL:', '');
+    const alt = selected || window.prompt('Alternative text:', '') || 'image';
+    return {
+      from,
+      to,
+      insert: src ? `![${alt}](${src})` : selected,
+      cursor: src ? alt.length + 2 : selected.length
     };
   }
 

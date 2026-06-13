@@ -115,3 +115,7 @@ Email/password users can change their password from the top navigation. The flow
 ## GitHub Pages
 
 The production workflow writes the ignored `public/firebase-config.json` from `secrets.SECRET_API_KEY_FIREBASE` and the remaining GitHub variables, passes the repository-specific base path to Angular, and deploys `dist/front/browser`. `firebase-config.example.json` documents the expected shape without containing credentials. Keep all static asset URLs base-path aware through `AppUrlService`.
+
+The workflow also copies the built `index.html` to `404.html`. GitHub Pages uses
+that file as the SPA fallback, so reloading or directly opening
+`/projects/:projectId/:slug` still boots Angular instead of showing GitHub's 404 page.
