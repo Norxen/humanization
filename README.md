@@ -80,3 +80,5 @@ Active projects are public. Platform admins create projects. Owners and project 
 Pushes to `main` trigger the GitHub Pages workflow. It writes the ignored Firebase runtime configuration from the API-key secret and repository variables, generates the manifest, builds Angular, and deploys the browser output.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) before adding or reorganizing documentation.
+
+See [PLATFORM_ROADMAP.md](PLATFORM_ROADMAP.md) for planned editor, backend, security, performance, and collaboration improvements.

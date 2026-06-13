@@ -6,15 +6,21 @@ Manuscript is the Angular 21 application that renders and edits multiple public 
 
 ```bash
 npm ci
+npm run dev:local
 npm run firebase:emulators
 npm run firebase:migrate:projects:emulator
 npm start
 npm test
+npm run test:functions
 npm run test:rules
 npm run build
 ```
 
 `npm start`, `npm test`, and `npm run build` regenerate the documentation manifest first.
+
+For normal local development, use `npm run dev:local`. It keeps Auth, Firestore,
+Functions, seeded project data, and Angular in one process. Stop everything together
+with `Ctrl+C`.
 
 ## Documentation Pipeline
 
@@ -29,7 +35,7 @@ Repository snapshots live in `public/docs/game-design` and remain seed/export ma
 - rejects broken internal Markdown and related-document links;
 - writes `public/docs/manifest.json`.
 
-The Angular store fetches the generated manifest, then loads the selected body from Firestore. Metadata remains in the manifest except for the runtime review date. PlantUML blocks are rendered as theme-aware SVG diagrams with source and diagram views.
+The generated manifest is seed/export validation material. Runtime projects load navigation metadata and Markdown bodies from Firestore. PlantUML blocks are rendered as theme-aware SVG diagrams with source and diagram views.
 
 ## Firestore
 
@@ -37,29 +43,41 @@ The Angular store fetches the generated manifest, then loads the selected body f
 - `projects/{projectId}/members/{uid}` stores owner/editor roles.
 - `projects/{projectId}/documents/{encodeURIComponent(path)}` stores body, metadata, order, and version.
 - `projects/{projectId}/documents/{id}/revisions/{version}` stores immutable previous bodies.
+- `users/{uid}/notifications/{notificationId}` stores private mention notifications.
 - `platformAdmins/{uid}` authorizes project creation and archive recovery.
 - Saves use transactions and reject stale versions.
 - Documents can be created, updated, and deleted. Parent pages must be emptied before deletion.
 - The runtime tree is inferred from Firestore paths. A page becomes a folder-style entry whenever it has child pages.
-- The editor persists unsaved drafts in `localStorage`.
+- The editor provides synchronized Milkdown visual, CodeMirror source, and rendered preview modes.
+- `#document` completes project-relative links and `@uid` completes project-member mentions.
+- The editor persists unsaved drafts in `localStorage`; successful saves record `updatedBy`.
 - Reading active projects is public. Firebase authentication plus project membership is required for document writes.
 
-Run the emulator in one terminal and seed it from another before starting Angular. Production seeding uses Application Default Credentials and refuses to overwrite existing records unless `--force` is supplied.
+Production seeding uses Application Default Credentials and refuses to overwrite existing records unless `--force` is supplied.
 
 Local Angular startup generates an ignored `public/firebase-config.json` that points to the Firestore emulator and contains only dummy Firebase identifiers:
 
 ```bash
-npm run firebase:emulators
+npm run dev:local
 ```
 
-In another terminal:
+The migration command creates or resets this emulator-only administrator:
 
-```bash
+```text
+Email: norxen.gamedeveloper@gmail.com
+Password: manuscript-local
+UID: editor-user
+```
+
+Override those development credentials without changing repository files:
+
+```powershell
+$env:MANUSCRIPT_LOCAL_EMAIL='your@email.com'
+$env:MANUSCRIPT_LOCAL_PASSWORD='your-local-password'
 npm run firebase:migrate:projects:emulator
-npm start
 ```
 
-Open the Emulator UI at `http://127.0.0.1:4000` and create an Authentication user with UID `editor-user` to use the seeded local owner/admin membership.
+The script refuses to connect anywhere except the local Auth emulator.
 
 Do not place production Firebase values in `public/firebase-config.json`. Production configuration is generated only by the deployment workflow.
 
@@ -70,6 +88,14 @@ For production:
 3. Copy the administrator UID and create `platformAdmins/{uid}` in Firestore.
 4. Open Authentication > Settings > Authorized domains and add `norxen.github.io`.
 5. Deploy the authenticated Firestore rules before exposing create/edit/delete controls.
+6. Upgrade the Firebase project to Blaze before deploying the mention Function.
+
+The Node.js 22 Function in `functions/` runs in `europe-west1` and creates mention notifications after document writes. It is included in the local emulator command but is not deployed automatically:
+
+```bash
+npm run test:functions
+firebase deploy --only functions,firestore:rules,firestore:indexes
+```
 
 Passwords are handled by Firebase Authentication over HTTPS and are never stored in Firestore, application code, or browser storage by Manuscript. The application stores only Firebase's managed authentication session.
 

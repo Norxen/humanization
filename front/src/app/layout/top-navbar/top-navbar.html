@@ -51,6 +51,48 @@
       </button>
     }
     @if (userEmail(); as email) {
+      <div class="notification-center">
+        <button
+          class="icon-button"
+          type="button"
+          title="Notifications"
+          aria-label="Notifications"
+          [attr.aria-expanded]="notificationsOpen()"
+          (click)="notificationsOpen.set(!notificationsOpen())"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"></path>
+          </svg>
+          @if (notifications.unreadCount()) {
+            <span class="notification-count">{{ notifications.unreadCount() > 99 ? '99+' : notifications.unreadCount() }}</span>
+          }
+        </button>
+        @if (notificationsOpen()) {
+          <section class="notification-panel" aria-label="Recent notifications">
+            <header>
+              <strong>Notifications</strong>
+              @if (notifications.unreadCount()) {
+                <button type="button" (click)="notifications.markAllRead()">Mark all read</button>
+              }
+            </header>
+            <div class="notification-list">
+              @for (notification of notifications.notifications(); track notification.id) {
+                <button
+                  type="button"
+                  class="notification-item"
+                  [class.unread]="!notification.read"
+                  (click)="openNotification(notification)"
+                >
+                  <span><strong>{{ notification.actorId }}</strong> mentioned you in {{ notification.documentTitle }}</span>
+                  <small>{{ notification.projectName }}</small>
+                </button>
+              } @empty {
+                <p>No notifications yet.</p>
+              }
+            </div>
+          </section>
+        }
+      </div>
       <span class="account" [title]="email">
         <span class="account-avatar">{{ email.slice(0, 1).toUpperCase() }}</span>
         <span class="user-email">{{ email }}</span>

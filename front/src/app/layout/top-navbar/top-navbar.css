@@ -9,6 +9,36 @@
   backdrop-filter: blur(20px) saturate(130%);
 }
 .brand,.workspace-info,.meta { display: flex; align-items: center; }
+.notification-center { position: relative; }
+.notification-count {
+  position: absolute; top: 1px; right: 1px; min-width: 15px; height: 15px;
+  display: grid; place-items: center; padding: 0 3px; border: 2px solid var(--background);
+  border-radius: 999px; color: #fff; background: var(--accent-bright);
+  font-size: 8px; font-weight: 800;
+}
+.notification-panel {
+  position: absolute; z-index: 80; top: 43px; right: 0; width: min(360px, calc(100vw - 24px));
+  overflow: hidden; border: 1px solid var(--line-strong); border-radius: 12px;
+  color: var(--ink); background: var(--surface-raised);
+  box-shadow: 0 20px 60px rgba(0,0,0,.3);
+}
+.notification-panel header {
+  height: 46px; display: flex; align-items: center; justify-content: space-between;
+  padding: 0 13px; border-bottom: 1px solid var(--line);
+}
+.notification-panel header button {
+  border: 0; color: var(--accent-bright); background: transparent; font: inherit; cursor: pointer;
+}
+.notification-list { max-height: 390px; overflow: auto; }
+.notification-list > p { margin: 0; padding: 24px; color: var(--muted); text-align: center; }
+.notification-item {
+  width: 100%; display: grid; gap: 5px; padding: 12px 14px;
+  border: 0; border-bottom: 1px solid var(--line); color: var(--ink);
+  background: transparent; text-align: left; cursor: pointer;
+}
+.notification-item:hover { background: var(--surface-hover); }
+.notification-item.unread { background: var(--accent-soft); }
+.notification-item small { color: var(--muted); }
 .brand { min-width: 0; gap: 10px; justify-self: start; }
 .brand-mark {
   width: 32px; height: 32px; display: grid; flex: none; place-items: center;

@@ -1,6 +1,9 @@
-import { Component, input, output } from '@angular/core';
+import { Component, inject, input, output, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { Theme } from '../../core/services/theme.service';
 import { Project } from '../../core/models/project.model';
+import { MentionNotification } from '../../core/models/notification.model';
+import { NotificationService } from '../../core/services/notification.service';
 
 @Component({
   selector: 'app-top-navbar',
@@ -8,6 +11,9 @@ import { Project } from '../../core/models/project.model';
   styleUrl: './top-navbar.css'
 })
 export class TopNavbar {
+  readonly notifications = inject(NotificationService);
+  private readonly router = inject(Router);
+  readonly notificationsOpen = signal(false);
   readonly theme = input.required<Theme>();
   readonly userEmail = input<string | null>(null);
   readonly authReady = input(false);
@@ -26,4 +32,13 @@ export class TopNavbar {
   readonly back = output<void>();
   readonly projectSettings = output<void>();
   readonly projectSelected = output<Project>();
+
+  async openNotification(notification: MentionNotification): Promise<void> {
+    this.notificationsOpen.set(false);
+    await this.notifications.markRead(notification);
+    await this.router.navigate(
+      ['/projects', notification.projectId, notification.projectSlug],
+      { queryParams: { document: notification.documentPath } }
+    );
+  }
 }

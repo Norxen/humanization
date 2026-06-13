@@ -46,4 +46,5 @@ export interface StoredDocument {
   lastReviewed: string;
   createdAt: Date | null;
   updatedAt: Date | null;
+  updatedBy: string | null;
 }

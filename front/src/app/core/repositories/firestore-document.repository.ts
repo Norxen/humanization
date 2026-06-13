@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { FirebaseService } from '../services/firebase.service';
+import { AuthService } from '../services/auth.service';
 import { StoredDocument } from '../models/document-page.model';
 import {
   DocumentConflictError,
@@ -17,11 +18,13 @@ interface FirestoreDocumentData {
   lastReviewed: string;
   createdAt?: { toDate(): Date };
   updatedAt?: { toDate(): Date };
+  updatedBy?: string;
 }
 
 @Injectable({ providedIn: 'root' })
 export class FirestoreDocumentRepository extends DocumentRepository {
   private readonly firebase = inject(FirebaseService);
+  private readonly auth = inject(AuthService);
 
   async list(projectId: string): Promise<StoredDocument[]> {
     const firestore = await this.firebase.firestore();
@@ -52,6 +55,7 @@ export class FirestoreDocumentRepository extends DocumentRepository {
     body: string,
     order: number
   ): Promise<StoredDocument> {
+    const updatedBy = this.requireUser();
     const firestore = await this.firebase.firestore();
     const { doc, increment, runTransaction, serverTimestamp } = await import(
       'firebase/firestore'
@@ -80,7 +84,8 @@ export class FirestoreDocumentRepository extends DocumentRepository {
         version: 1,
         lastReviewed: this.today(),
         createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
+        updatedAt: serverTimestamp(),
+        updatedBy
       });
       transaction.update(doc(firestore, 'projects', projectId), {
         documentCount: increment(1),
@@ -126,6 +131,7 @@ export class FirestoreDocumentRepository extends DocumentRepository {
     body: string,
     expectedVersion: number
   ): Promise<StoredDocument> {
+    const updatedBy = this.requireUser();
     const firestore = await this.firebase.firestore();
     const { doc, runTransaction, serverTimestamp } = await import(
       'firebase/firestore'
@@ -161,7 +167,8 @@ export class FirestoreDocumentRepository extends DocumentRepository {
         body,
         version: current.version + 1,
         lastReviewed: this.today(),
-        updatedAt: serverTimestamp()
+        updatedAt: serverTimestamp(),
+        updatedBy
       });
     });
 
@@ -183,8 +190,17 @@ export class FirestoreDocumentRepository extends DocumentRepository {
       version: data.version,
       lastReviewed: data.lastReviewed,
       createdAt: data.createdAt?.toDate() ?? null,
-      updatedAt: data.updatedAt?.toDate() ?? null
+      updatedAt: data.updatedAt?.toDate() ?? null,
+      updatedBy: data.updatedBy ?? null
     };
+  }
+
+  private requireUser(): string {
+    const userId = this.auth.user()?.uid;
+    if (!userId) {
+      throw new Error('Sign in before changing project documents.');
+    }
+    return userId;
   }
 
   private today(): string {

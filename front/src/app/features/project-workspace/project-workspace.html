@@ -43,6 +43,7 @@
           [projectId]="projectId()"
           [document]="document"
           [pages]="store.pages()"
+          [members]="projects.members()"
           (dirtyChanged)="editorDirty.set($event)"
           (cancelled)="finishEditing()"
           (saved)="finishEditing()"

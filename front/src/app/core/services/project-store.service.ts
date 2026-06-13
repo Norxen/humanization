@@ -83,7 +83,7 @@ export class ProjectStore {
       } else {
         this.activeRole.set(null);
       }
-      if (this.canManageActive()) {
+      if (this.activeRole() !== null) {
         this.members.set(await this.repository.listMembers(projectId));
       } else {
         this.members.set([]);

@@ -93,7 +93,8 @@ export class FirestoreProjectRepository extends ProjectRepository {
         version: 1,
         lastReviewed: new Date().toISOString().slice(0, 10),
         createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
+        updatedAt: serverTimestamp(),
+        updatedBy: ownerId
       });
     }
     await batch.commit();

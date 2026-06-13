@@ -3,6 +3,7 @@ import {
   HostListener,
   OnDestroy,
   OnInit,
+  ViewChild,
   computed,
   inject,
   input,
@@ -18,6 +19,9 @@ import {
 import { MarkdownRendererService } from '../../core/services/markdown-renderer.service';
 import { DocumentationStore } from '../../core/services/documentation-store.service';
 import { DocumentConflictError } from '../../core/repositories/document.repository';
+import { ProjectMembership } from '../../core/models/project.model';
+import { VisualMarkdownEditor } from './visual-markdown-editor';
+import { SourceMarkdownEditor } from './source-markdown-editor';
 
 interface LocalDraft {
   body: string;
@@ -31,16 +35,20 @@ interface ValidationResult {
 
 @Component({
   selector: 'app-document-editor',
+  imports: [VisualMarkdownEditor, SourceMarkdownEditor],
   templateUrl: './document-editor.html',
   styleUrl: './document-editor.css'
 })
 export class DocumentEditor implements OnInit, OnDestroy {
+  @ViewChild(VisualMarkdownEditor) private visualEditor?: VisualMarkdownEditor;
+  @ViewChild(SourceMarkdownEditor) private sourceEditor?: SourceMarkdownEditor;
   private readonly renderer = inject(MarkdownRendererService);
   private readonly store = inject(DocumentationStore);
   private previewTimer: ReturnType<typeof setTimeout> | null = null;
 
   readonly document = input.required<LoadedDocument>();
   readonly pages = input.required<DocumentDescriptor[]>();
+  readonly members = input<ProjectMembership[]>([]);
   readonly projectId = input.required<string>();
   readonly cancelled = output<void>();
   readonly saved = output<LoadedDocument>();
@@ -53,7 +61,7 @@ export class DocumentEditor implements OnInit, OnDestroy {
   readonly saving = signal(false);
   readonly saveError = signal<string | null>(null);
   readonly conflict = signal<{ local: string; latest: StoredDocument } | null>(null);
-  readonly mobileView = signal<'edit' | 'preview'>('edit');
+  readonly mode = signal<'edit' | 'markdown' | 'preview'>('edit');
   readonly validation = computed(() => this.validate(this.body()));
   readonly dirty = computed(() => this.body() !== this.baseBody());
   readonly canSave = computed(
@@ -95,6 +103,30 @@ export class DocumentEditor implements OnInit, OnDestroy {
     this.dirtyChanged.emit(this.dirty());
     this.saveError.set(null);
     this.schedulePreview();
+  }
+
+  setMode(mode: 'edit' | 'markdown' | 'preview'): void {
+    this.mode.set(mode);
+    if (mode === 'preview') this.schedulePreview();
+    setTimeout(() => {
+      mode === 'edit' ? this.visualEditor?.focus() : this.sourceEditor?.focus();
+    });
+  }
+
+  runToolbar(command: string): void {
+    if (command === 'search') {
+      this.setMode('markdown');
+      setTimeout(() => this.sourceEditor?.openSearch());
+      return;
+    }
+    if (this.mode() === 'preview') {
+      this.setMode('edit');
+      setTimeout(() => this.visualEditor?.execute(command as never));
+      return;
+    }
+    this.mode() === 'markdown'
+      ? this.sourceEditor?.execute(command)
+      : this.visualEditor?.execute(command as never);
   }
 
   async saveDocument(): Promise<void> {

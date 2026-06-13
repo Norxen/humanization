@@ -74,10 +74,15 @@ export class ProjectWorkspace implements OnInit {
       }
       if (routeSlug !== project.slug) {
         await this.router.navigate(['/projects', project.id, project.slug], {
-          replaceUrl: true
+          replaceUrl: true,
+          queryParamsHandling: 'preserve'
         });
       }
       await this.store.initialize(project.id);
+      const requestedDocument = this.route.snapshot.queryParamMap.get('document');
+      if (requestedDocument) {
+        await this.store.selectPath(requestedDocument);
+      }
     } catch (error) {
       await this.router.navigate(['/'], {
         state: { projectError: error instanceof Error ? error.message : 'Project unavailable.' }

@@ -1,5 +1,6 @@
 import { computed, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { provideRouter, Router } from '@angular/router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from './app';
@@ -20,6 +21,7 @@ import {
   ProjectMembership,
   ProjectTemplateDocument
 } from './core/models/project.model';
+import { DocumentEditor } from './features/document-editor/document-editor';
 
 const now = new Date('2026-06-11T00:00:00Z');
 const project: Project = {
@@ -127,7 +129,8 @@ class MemoryDocumentRepository extends DocumentRepository {
       version: 1,
       lastReviewed: '2026-06-11',
       createdAt: now,
-      updatedAt: now
+      updatedAt: now,
+      updatedBy: 'admin-user'
     },
     {
       path: 'Systems.md',
@@ -139,7 +142,8 @@ class MemoryDocumentRepository extends DocumentRepository {
       version: 1,
       lastReviewed: '2026-06-11',
       createdAt: now,
-      updatedAt: now
+      updatedAt: now,
+      updatedBy: 'admin-user'
     }
   ];
   list(): Promise<StoredDocument[]> { return Promise.resolve(this.documents.map((item) => ({ ...item }))); }
@@ -150,7 +154,8 @@ class MemoryDocumentRepository extends DocumentRepository {
   create(_projectId: string, path: string, body: string, order: number): Promise<StoredDocument> {
     const created: StoredDocument = {
       path, body, order, status: 'draft', summary: 'New documentation page.',
-      related: [], version: 1, lastReviewed: '2026-06-11', createdAt: now, updatedAt: now
+      related: [], version: 1, lastReviewed: '2026-06-11', createdAt: now, updatedAt: now,
+      updatedBy: 'admin-user'
     };
     this.documents.push(created);
     return Promise.resolve({ ...created });
@@ -324,12 +329,11 @@ describe('multi-project Manuscript', () => {
 
     (fixture.nativeElement.querySelector('.edit-button') as HTMLButtonElement).click();
     fixture.detectChanges();
-    const textarea = fixture.nativeElement.querySelector(
-      'textarea[aria-label="Markdown document body"]'
-    ) as HTMLTextAreaElement;
-    textarea.value = '# Index\n\nDraft.';
-    textarea.dispatchEvent(new Event('input'));
+    const editor = fixture.debugElement.query(By.directive(DocumentEditor))
+      .componentInstance as DocumentEditor;
+    editor.updateBody('# Index\n\nDraft.');
 
     expect(localStorage.getItem('manuscript-draft:project-1:Index.md')).toContain('Draft.');
+    expect(fixture.nativeElement.querySelectorAll('.editor-modes button')).toHaveLength(3);
   });
 });

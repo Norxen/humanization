@@ -300,7 +300,8 @@ export class DocumentationStore {
       version: active?.descriptor.path === page.path ? active.version : 1,
       lastReviewed: page.lastReviewed,
       createdAt: null,
-      updatedAt: null
+      updatedAt: null,
+      updatedBy: null
     };
   }
 

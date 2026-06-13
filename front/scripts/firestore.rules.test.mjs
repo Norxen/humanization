@@ -9,9 +9,11 @@ import {
   initializeTestEnvironment
 } from '@firebase/rules-unit-testing';
 import {
+  collection,
   deleteDoc,
   doc,
   getDoc,
+  getDocs,
   serverTimestamp,
   setDoc,
   updateDoc,
@@ -120,7 +122,8 @@ test('allows editors to create project documents and update document count', asy
     version: 1,
     lastReviewed: '2026-06-11',
     createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp()
+    updatedAt: serverTimestamp(),
+    updatedBy: 'editor-user'
   });
   batch.update(doc(firestore, ...projectPath), {
     documentCount: 2,
@@ -140,7 +143,8 @@ test('requires immutable revisions for document saves', async () => {
     body: '# Index\n\nChanged.',
     version: 2,
     lastReviewed: '2026-06-11',
-    updatedAt: serverTimestamp()
+    updatedAt: serverTimestamp(),
+    updatedBy: 'editor-user'
   }));
 
   const batch = writeBatch(firestore);
@@ -155,7 +159,8 @@ test('requires immutable revisions for document saves', async () => {
     body: '# Index\n\nChanged.',
     version: 2,
     lastReviewed: '2026-06-11',
-    updatedAt: serverTimestamp()
+    updatedAt: serverTimestamp(),
+    updatedBy: 'editor-user'
   });
   await assertSucceeds(batch.commit());
 });
@@ -234,7 +239,8 @@ test('allows a platform admin to create a complete templated project atomically'
       version: 1,
       lastReviewed: '2026-06-11',
       createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
+      updatedAt: serverTimestamp(),
+      updatedBy: 'admin-user'
     });
   }
   await assertSucceeds(batch.commit());
@@ -290,4 +296,80 @@ test('transfers ownership while retaining the previous owner as editor', async (
     addedAt: serverTimestamp()
   });
   await assertSucceeds(batch.commit());
+});
+
+test('allows project members to list member UIDs and denies unrelated users', async () => {
+  const editor = environment.authenticatedContext('editor-user').firestore();
+  const members = await assertSucceeds(
+    getDocs(collection(editor, ...projectPath, 'members'))
+  );
+  assert.equal(members.size, 2);
+
+  const unrelated = environment.authenticatedContext('ordinary-user').firestore();
+  await assertFails(getDocs(collection(unrelated, ...projectPath, 'members')));
+});
+
+test('requires updatedBy to match the authenticated editor', async () => {
+  const firestore = environment.authenticatedContext('editor-user').firestore();
+  const revision = {
+    path: 'Index.md',
+    body: '# Index\n\nOriginal.',
+    version: 1,
+    lastReviewed: '2026-06-11',
+    createdAt: serverTimestamp()
+  };
+
+  const invalid = writeBatch(firestore);
+  invalid.set(doc(firestore, ...documentPath, 'revisions', '1'), revision);
+  invalid.update(doc(firestore, ...documentPath), {
+    body: '# Index\n\nInvalid actor.',
+    version: 2,
+    lastReviewed: '2026-06-12',
+    updatedAt: serverTimestamp(),
+    updatedBy: 'owner-user'
+  });
+  await assertFails(invalid.commit());
+
+  const valid = writeBatch(firestore);
+  valid.set(doc(firestore, ...documentPath, 'revisions', '1'), revision);
+  valid.update(doc(firestore, ...documentPath), {
+    body: '# Index\n\nValid actor.',
+    version: 2,
+    lastReviewed: '2026-06-12',
+    updatedAt: serverTimestamp(),
+    updatedBy: 'editor-user'
+  });
+  await assertSucceeds(valid.commit());
+});
+
+test('keeps notifications private and limits clients to read-state updates', async () => {
+  await environment.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), 'users', 'editor-user', 'notifications', 'mention-1'), {
+      type: 'mention',
+      recipientId: 'editor-user',
+      actorId: 'owner-user',
+      projectId: 'project-1',
+      projectName: 'Example Game',
+      projectSlug: 'example-game',
+      documentPath: 'Index.md',
+      documentTitle: 'Index',
+      documentVersion: 2,
+      createdAt: new Date(),
+      read: false,
+      readAt: null
+    });
+  });
+
+  const owner = environment.authenticatedContext('owner-user').firestore();
+  const editor = environment.authenticatedContext('editor-user').firestore();
+  const reference = doc(editor, 'users', 'editor-user', 'notifications', 'mention-1');
+  await assertFails(getDoc(doc(owner, 'users', 'editor-user', 'notifications', 'mention-1')));
+  await assertSucceeds(getDoc(reference));
+  await assertSucceeds(updateDoc(reference, { read: true, readAt: serverTimestamp() }));
+  await assertFails(updateDoc(reference, { actorId: 'editor-user' }));
+  await assertFails(deleteDoc(reference));
+  await assertFails(setDoc(doc(editor, 'users', 'editor-user', 'notifications', 'client-made'), {
+    read: false,
+    readAt: null
+  }));
 });

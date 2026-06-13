@@ -129,9 +129,7 @@ service cloud.firestore {
         );
 
       match /members/{userId} {
-        allow read: if platformAdmin()
-          || (signedIn() && request.auth.uid == userId)
-          || projectOwner(projectId);
+        allow read: if canEdit(projectId);
         allow create, update: if canManage(projectId)
           && request.resource.data.keys().hasOnly(['role', 'addedAt'])
           && request.resource.data.role in ['owner', 'editor']
@@ -160,23 +158,25 @@ service cloud.firestore {
 
         function validDocumentCreate() {
           return request.resource.data.keys().hasOnly([
-              'path', 'body', 'status', 'summary', 'related', 'order', 'version',
-              'lastReviewed', 'createdAt', 'updatedAt'
+            'path', 'body', 'status', 'summary', 'related', 'order', 'version',
+              'lastReviewed', 'createdAt', 'updatedAt', 'updatedBy'
             ])
             && validMetadata(request.resource.data)
             && request.resource.data.version == 1
             && request.resource.data.createdAt == request.time
-            && request.resource.data.updatedAt == request.time;
+            && request.resource.data.updatedAt == request.time
+            && request.resource.data.updatedBy == request.auth.uid;
         }
 
         function validDocumentUpdate() {
           return request.resource.data.diff(resource.data).affectedKeys()
-              .hasOnly(['body', 'version', 'lastReviewed', 'updatedAt'])
+              .hasOnly(['body', 'version', 'lastReviewed', 'updatedAt', 'updatedBy'])
             && validMetadata(request.resource.data)
             && request.resource.data.path == resource.data.path
             && request.resource.data.createdAt == resource.data.createdAt
             && request.resource.data.version == resource.data.version + 1
             && request.resource.data.updatedAt == request.time
+            && request.resource.data.updatedBy == request.auth.uid
             && existsAfter(
               /databases/$(database)/documents/projects/$(projectId)/documents/$(documentId)/revisions/$(resource.data.version)
             );
@@ -210,6 +210,17 @@ service cloud.firestore {
               == request.resource.data.version + 1;
         }
       }
+    }
+
+    match /users/{userId}/notifications/{notificationId} {
+      allow read: if signedIn() && request.auth.uid == userId;
+      allow create, delete: if false;
+      allow update: if signedIn()
+        && request.auth.uid == userId
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['read', 'readAt'])
+        && request.resource.data.read == true
+        && request.resource.data.readAt == request.time;
     }
   }
 }
