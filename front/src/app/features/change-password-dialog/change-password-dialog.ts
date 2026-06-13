@@ -1,8 +1,10 @@
 import { Component, inject, input, output, signal } from '@angular/core';
 import { AuthService } from '../../core/services/auth.service';
+import { Modal } from '../../shared/modal/modal';
 
 @Component({
   selector: 'app-change-password-dialog',
+  imports: [Modal],
   templateUrl: './change-password-dialog.html',
   styleUrl: '../login-dialog/login-dialog.css'
 })

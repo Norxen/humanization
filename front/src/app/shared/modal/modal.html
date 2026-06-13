@@ -1,0 +1,45 @@
+<div class="modal-backdrop" (pointerdown)="closeFromBackdrop($event)">
+  <section
+    #panel
+    class="modal-panel"
+    [class.small]="size() === 'small'"
+    [class.large]="size() === 'large'"
+    [attr.role]="alert() ? 'alertdialog' : 'dialog'"
+    aria-modal="true"
+    [attr.aria-labelledby]="titleId"
+    tabindex="-1"
+  >
+    <header class="modal-header">
+      <div>
+        @if (eyebrow(); as label) {
+          <span class="modal-eyebrow">{{ label }}</span>
+        }
+        <h2 [id]="titleId">{{ title() }}</h2>
+      </div>
+      @if (dismissible()) {
+        <button
+          class="modal-close"
+          type="button"
+          aria-label="Close dialog"
+          [disabled]="pending()"
+          (click)="requestClose()"
+        >&times;</button>
+      }
+    </header>
+
+    <div class="modal-content">
+      <ng-content />
+    </div>
+
+    @if (discardOpen()) {
+      <div class="discard-confirmation" role="alert">
+        <strong>Unsaved changes</strong>
+        <p>{{ discardMessage() }}</p>
+        <div>
+          <button type="button" (click)="discardOpen.set(false)">Keep editing</button>
+          <button class="danger" type="button" (click)="confirmDiscard()">Discard changes</button>
+        </div>
+      </div>
+    }
+  </section>
+</div>

@@ -138,6 +138,7 @@ export class SourceMarkdownEditor implements AfterViewInit, OnDestroy {
     const selection = this.view.state.selection.main;
     const selected = this.view.state.sliceDoc(selection.from, selection.to);
     const line = this.view.state.doc.lineAt(selection.from);
+    if (command === 'link' || command === 'image') return;
     const replacements: Record<string, { from: number; to: number; insert: string; cursor?: number }> = {
       paragraph: { from: line.from, to: line.to, insert: line.text.replace(/^#{1,6}\s+/, '') },
       h2: { from: line.from, to: line.to, insert: `## ${line.text.replace(/^#{1,6}\s+/, '')}` },
@@ -160,9 +161,7 @@ export class SourceMarkdownEditor implements AfterViewInit, OnDestroy {
         from: selection.from,
         to: selection.to,
         insert: '\n| Column 1 | Column 2 | Column 3 |\n| --- | --- | --- |\n|  |  |  |\n|  |  |  |\n'
-      },
-      link: this.linkReplacement(selection.from, selection.to, selected),
-      image: this.imageReplacement(selection.from, selection.to, selected)
+      }
     };
     const replacement = replacements[command];
     if (!replacement) return;
@@ -171,6 +170,32 @@ export class SourceMarkdownEditor implements AfterViewInit, OnDestroy {
       selection: {
         anchor: replacement.from + (replacement.cursor ?? replacement.insert.length)
       }
+    });
+    this.view.focus();
+  }
+
+  insertLink(href: string): void {
+    if (!this.view) return;
+    const selection = this.view.state.selection.main;
+    const selected = this.view.state.sliceDoc(selection.from, selection.to);
+    const label = selected || 'link text';
+    const insert = `[${label}](${href})`;
+    this.view.dispatch({
+      changes: { from: selection.from, to: selection.to, insert },
+      selection: { anchor: selection.from + insert.length }
+    });
+    this.view.focus();
+  }
+
+  insertImage(src: string, alt: string): void {
+    if (!this.view) return;
+    const selection = this.view.state.selection.main;
+    const selected = this.view.state.sliceDoc(selection.from, selection.to);
+    const label = alt || selected || 'image';
+    const insert = `![${label}](${src})`;
+    this.view.dispatch({
+      changes: { from: selection.from, to: selection.to, insert },
+      selection: { anchor: selection.from + insert.length }
     });
     this.view.focus();
   }
@@ -229,28 +254,6 @@ export class SourceMarkdownEditor implements AfterViewInit, OnDestroy {
       to,
       insert: `${prefix}${content}${suffix}`,
       cursor: prefix.length + content.length
-    };
-  }
-
-  private linkReplacement(from: number, to: number, selected: string) {
-    const href = window.prompt('Link URL or relative Markdown path:', '');
-    const label = selected || 'link text';
-    return {
-      from,
-      to,
-      insert: href ? `[${label}](${href})` : label,
-      cursor: href ? label.length + 1 : label.length
-    };
-  }
-
-  private imageReplacement(from: number, to: number, selected: string) {
-    const src = window.prompt('Image URL:', '');
-    const alt = selected || window.prompt('Alternative text:', '') || 'image';
-    return {
-      from,
-      to,
-      insert: src ? `![${alt}](${src})` : selected,
-      cursor: src ? alt.length + 2 : selected.length
     };
   }
 

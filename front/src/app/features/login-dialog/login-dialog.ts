@@ -1,8 +1,10 @@
 import { Component, inject, output, signal } from '@angular/core';
 import { AuthService } from '../../core/services/auth.service';
+import { Modal } from '../../shared/modal/modal';
 
 @Component({
   selector: 'app-login-dialog',
+  imports: [Modal],
   templateUrl: './login-dialog.html',
   styleUrl: './login-dialog.css'
 })
@@ -10,6 +12,7 @@ export class LoginDialog {
   private readonly auth = inject(AuthService);
 
   readonly closed = output<void>();
+  readonly signedIn = output<void>();
   readonly email = signal('');
   readonly password = signal('');
   readonly submitting = signal(false);
@@ -33,6 +36,7 @@ export class LoginDialog {
     try {
       await this.auth.login(this.email(), this.password());
       this.password.set('');
+      this.signedIn.emit();
       this.closed.emit();
     } catch (error) {
       this.error.set(error instanceof Error ? error.message : 'Unable to sign in.');
@@ -46,6 +50,7 @@ export class LoginDialog {
     this.error.set(null);
     try {
       await this.auth.loginWithGoogle();
+      this.signedIn.emit();
       this.closed.emit();
     } catch (error) {
       this.error.set(error instanceof Error ? error.message : 'Unable to sign in.');

@@ -1,0 +1,13 @@
+p { margin: 0; color: var(--muted); line-height: 1.65; }
+.confirmation-error {
+  margin-top: 12px; padding: 10px 12px; border: 1px solid rgba(244,63,94,.28);
+  border-radius: 7px; color: #fb7185; background: rgba(190,18,60,.08);
+}
+.actions { display: flex; justify-content: flex-end; gap: 9px; margin-top: 24px; }
+button {
+  min-height: 38px; padding: 0 14px; border: 1px solid var(--line); border-radius: 7px;
+  color: var(--ink); background: transparent; cursor: pointer;
+}
+button.primary { border-color: transparent; color: #fff; background: var(--accent); }
+button.danger { border-color: transparent; color: #fff; background: #be123c; }
+button:disabled { opacity: .5; cursor: wait; }

@@ -1,10 +1,11 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { Component, input, output, signal } from '@angular/core';
 import { FileTreeNode } from '../../core/models/file-tree-node.model';
+import { ContextMenu } from '../../shared/context-menu/context-menu';
 
 @Component({
   selector: 'app-file-tree',
-  imports: [NgTemplateOutlet],
+  imports: [NgTemplateOutlet, ContextMenu],
   templateUrl: './file-tree.html',
   styleUrl: './file-tree.css'
 })
@@ -17,6 +18,7 @@ export class FileTree {
   readonly documentCreateRequested = output<string | null>();
   readonly documentDeleteRequested = output<FileTreeNode>();
   readonly expandedFolders = signal(new Set<string>());
+  readonly activeMenu = signal<string | null>(null);
 
   toggleFolder(id: string): void {
     this.expandedFolders.update((folders) => {
@@ -31,16 +33,13 @@ export class FileTree {
   }
 
   selectNode(node: FileTreeNode): void {
-    if (node.type === 'folder') {
-      this.toggleFolder(node.id);
-    }
-
     if (node.pageIndex !== undefined) {
       this.pageSelected.emit(node.pageIndex);
     }
   }
 
   requestDocumentCreation(node: FileTreeNode | null): void {
+    this.activeMenu.set(null);
     if (node) {
       this.expandedFolders.update((folders) => new Set(folders).add(node.id));
     }
@@ -48,6 +47,11 @@ export class FileTree {
   }
 
   requestDocumentDeletion(node: FileTreeNode): void {
+    this.activeMenu.set(null);
     this.documentDeleteRequested.emit(node);
+  }
+
+  toggleMenu(nodeId: string): void {
+    this.activeMenu.update((active) => active === nodeId ? null : nodeId);
   }
 }

@@ -11,8 +11,8 @@
   [activeProjectId]="projectId()"
   (menuToggle)="sidebarOpen.set(!sidebarOpen())"
   (themeToggle)="themeService.toggle()"
-  (back)="router.navigate(['/'])"
-  (projectSettings)="settingsOpen.set(true)"
+  (back)="leaveToLobby()"
+  (projectSettings)="openSettings()"
   (projectSelected)="switchProject($event)"
   (login)="loginOpen.set(true)"
   (passwordChange)="passwordChangeOpen.set(true)"
@@ -27,7 +27,7 @@
       [fileCount]="store.pages().length"
       [canManage]="projects.canEditActive()"
       (pageSelected)="selectPage($event)"
-      (documentCreateRequested)="createDocument($event)"
+      (documentCreateRequested)="openCreateDocument($event)"
       (documentDeleteRequested)="requestDeleteDocument($event)"
     />
   </aside>
@@ -68,62 +68,186 @@
 </div>
 
 @if (deleteTarget(); as target) {
-  <div class="modal-backdrop" (pointerdown)="closeDeleteFromBackdrop($event)">
-    <section class="dialog" role="alertdialog">
-      <span class="eyebrow danger">Delete document</span>
-      <h2>Delete {{ target.displayName }}?</h2>
-      <p>{{ target.children?.length ? 'Delete its children first.' : 'This permanently removes the page and its revision history.' }}</p>
-      @if (deleteError(); as error) { <p class="form-error">{{ error }}</p> }
-      <div class="modal-actions">
-        <button type="button" (click)="deleteTarget.set(null)">Cancel</button>
-        <button class="danger-button" type="button" [disabled]="deleting() || !!target.children?.length" (click)="confirmDeleteDocument()">Delete</button>
-      </div>
-    </section>
-  </div>
+  <app-confirm-dialog
+    [title]="'Delete ' + target.displayName + '?'"
+    message="This permanently removes the page and its revision history."
+    confirmLabel="Delete document"
+    eyebrow="Destructive action"
+    [danger]="true"
+    [pending]="deleting()"
+    [error]="deleteError()"
+    (confirmed)="confirmDeleteDocument()"
+    (cancelled)="deleteTarget.set(null); deleteError.set(null)"
+  />
 }
 
-@if (settingsOpen(); as open) {
+@if (createParent() !== undefined) {
+  <app-modal
+    #createDocumentModal
+    size="small"
+    title="Create document"
+    eyebrow="Documentation"
+    [dirty]="!!createName()"
+    [pending]="creatingDocument()"
+    (closed)="createParent.set(undefined)"
+  >
+    <form (submit)="$event.preventDefault(); createDocument()">
+      <p class="dialog-description">
+        {{ createParent() ? 'Create a child page under the selected document.' : 'Create a page at the project root.' }}
+      </p>
+      <label>
+        Document name
+        <input
+          autofocus
+          required
+          maxlength="120"
+          [value]="createName()"
+          (input)="createName.set($any($event.target).value)"
+        >
+      </label>
+      <div class="path-preview">
+        <span>Resulting path and H1</span>
+        <code>{{ createPathPreview() }}</code>
+        <code># {{ createTitlePreview() }}</code>
+      </div>
+      @if (createError(); as error) { <p class="form-error">{{ error }}</p> }
+      <div class="modal-actions">
+        <button type="button" [disabled]="creatingDocument()" (click)="createDocumentModal.requestClose()">Cancel</button>
+        <button class="primary" type="submit" [disabled]="creatingDocument() || !createName().trim()">
+          {{ creatingDocument() ? 'Creating...' : 'Create document' }}
+        </button>
+      </div>
+    </form>
+  </app-modal>
+}
+
+@if (settingsOpen()) {
   @if (projects.activeProject(); as project) {
-    <div class="modal-backdrop" (pointerdown)="closeSettingsFromBackdrop($event)">
-      <section class="dialog settings">
-        <span class="eyebrow">Project administration</span>
-        <h2>Project settings</h2>
-        <form (submit)="$event.preventDefault(); updateProject(name.value, slug.value, description.value)">
-          <label>Name<input #name [value]="project.name" required></label>
-          <label>URL slug<input #slug [value]="project.slug" required></label>
-          <label>Description<textarea #description [value]="project.description"></textarea></label>
-          <button class="primary" type="submit">Save project</button>
+    <app-modal
+      #settingsModal
+      size="medium"
+      title="Project settings"
+      eyebrow="Project administration"
+      [dirty]="settingsDirty()"
+      [pending]="settingsPending()"
+      (closed)="settingsOpen.set(false)"
+    >
+        <form (submit)="$event.preventDefault(); updateProject()">
+          <label>Name<input required [value]="settingsName()" (input)="settingsName.set($any($event.target).value)"></label>
+          <label>URL slug<input required [value]="settingsSlug()" (input)="settingsSlug.set($any($event.target).value)"></label>
+          <label>Description<textarea [value]="settingsDescription()" (input)="settingsDescription.set($any($event.target).value)"></textarea></label>
+          <button class="primary" type="submit" [disabled]="settingsPending() || !settingsDirty()">
+            {{ settingsPending() ? 'Saving...' : 'Save project' }}
+          </button>
         </form>
         <div class="settings-section">
           <h3>Members</h3>
           @for (member of projects.members(); track member.userId) {
-            <div class="member-row"><code>{{ member.userId }}</code><span>{{ member.role }}</span>
-              @if (member.role === 'editor') { <button type="button" (click)="projects.removeEditor(member.userId)">Remove</button> }
+            <div class="member-row">
+              <div class="member-identity">
+                <code>{{ member.userId }}</code>
+                <span>{{ member.role }}</span>
+              </div>
+              <button type="button" (click)="copyUid(member.userId)">Copy UID</button>
+              @if (member.role === 'editor') {
+                <button
+                  type="button"
+                  [disabled]="memberPending() === 'remove:' + member.userId"
+                  (click)="requestRemoveEditor(member.userId)"
+                >Remove</button>
+              }
             </div>
           }
           <form class="inline-form" (submit)="$event.preventDefault(); addEditor(editorUid.value); editorUid.value=''">
             <input #editorUid placeholder="Firebase user UID" required>
-            <button type="submit">Add editor</button>
+            <button type="submit" [disabled]="!!memberPending()">Add editor</button>
           </form>
+          <small class="settings-hint">Email-based member lookup is planned for the server API. For now, use the Firebase UID.</small>
         </div>
         <div class="settings-section">
           <h3>Ownership</h3>
-          <form class="inline-form" (submit)="$event.preventDefault(); transferOwnership(ownerUid.value)">
+          <form class="inline-form" (submit)="$event.preventDefault(); requestTransferOwnership(ownerUid.value)">
             <input #ownerUid placeholder="New owner Firebase UID" required>
-            <button type="submit">Transfer</button>
+            <button type="submit" [disabled]="settingsPending()">Transfer</button>
           </form>
         </div>
         @if (settingsError(); as error) { <p class="form-error">{{ error }}</p> }
         <div class="modal-actions split">
-          <button class="danger-button" type="button" (click)="archiveProject()">Archive project</button>
-          <button type="button" (click)="settingsOpen.set(false)">Close</button>
+          <button class="danger-button" type="button" [disabled]="settingsPending()" (click)="requestArchiveProject()">Archive project</button>
+          <button type="button" (click)="settingsModal.requestClose()">Close</button>
         </div>
-      </section>
-    </div>
+    </app-modal>
   }
 }
 
-@if (loginOpen()) { <app-login-dialog (closed)="loginOpen.set(false)" /> }
+@if (confirmation(); as action) {
+  @if (action.type === 'archive') {
+    <app-confirm-dialog
+      title="Archive this project?"
+      message="It will disappear from the public lobby. A platform administrator can restore it later."
+      confirmLabel="Archive project"
+      eyebrow="Project lifecycle"
+      [danger]="true"
+      [pending]="settingsPending()"
+      [error]="confirmationError()"
+      (confirmed)="archiveProject()"
+      (cancelled)="confirmation.set(null); confirmationError.set(null)"
+    />
+  } @else if (action.type === 'transfer' && action.userId) {
+    <app-confirm-dialog
+      title="Transfer project ownership?"
+      [message]="'Transfer ownership to ' + action.userId + '? You will remain an editor.'"
+      confirmLabel="Transfer ownership"
+      eyebrow="Ownership"
+      [danger]="true"
+      [pending]="settingsPending()"
+      [error]="confirmationError()"
+      (confirmed)="transferOwnership(action.userId)"
+      (cancelled)="confirmation.set(null); confirmationError.set(null)"
+    />
+  } @else if (action.type === 'remove' && action.userId) {
+    <app-confirm-dialog
+      title="Remove editor access?"
+      [message]="action.userId + ' will no longer be able to edit this project.'"
+      confirmLabel="Remove editor"
+      eyebrow="Member access"
+      [danger]="true"
+      [pending]="memberPending() === 'remove:' + action.userId"
+      [error]="confirmationError()"
+      (confirmed)="removeEditor(action.userId)"
+      (cancelled)="confirmation.set(null); confirmationError.set(null)"
+    />
+  }
+}
+
+@if (pendingEditorAction()) {
+  <app-confirm-dialog
+    title="Leave Edit mode?"
+    message="Your unsaved local draft will be preserved and restored when you edit this document again."
+    confirmLabel="Leave editor"
+    eyebrow="Unsaved changes"
+    (confirmed)="confirmEditorAction()"
+    (cancelled)="pendingEditorAction.set(null)"
+  />
+}
+
+@if (routeLeavePending()) {
+  <app-confirm-dialog
+    title="Leave this workspace?"
+    message="Your unsaved local draft will be preserved and restored when you return to this document."
+    confirmLabel="Leave workspace"
+    eyebrow="Unsaved changes"
+    (confirmed)="resolveRouteLeave(true)"
+    (cancelled)="resolveRouteLeave(false)"
+  />
+}
+
+@if (loginOpen()) {
+  <app-login-dialog
+    (signedIn)="refreshAccessAfterLogin()"
+    (closed)="loginOpen.set(false)"
+  />
+}
 @if (passwordChangeOpen()) {
   <app-change-password-dialog
     [setMode]="auth.canSetPassword()"

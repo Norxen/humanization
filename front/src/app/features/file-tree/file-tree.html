@@ -35,12 +35,21 @@
       [class.folder]="node.type === 'folder'"
       [style.padding-left.px]="9 + depth * 20"
     >
+      @if (node.type === 'folder') {
+        <button
+          class="folder-toggle"
+          type="button"
+          [attr.aria-label]="(isExpanded(node.id) ? 'Collapse ' : 'Expand ') + node.displayName"
+          [attr.aria-expanded]="isExpanded(node.id)"
+          (click)="toggleFolder(node.id)"
+        >
+          <span class="chevron" [class.expanded]="isExpanded(node.id)">&gt;</span>
+        </button>
+      } @else {
+        <span class="folder-toggle-spacer"></span>
+      }
       <button class="node-select" type="button" (click)="selectNode(node)">
         @if (node.type === 'folder') {
-          <span
-            class="chevron"
-            [class.expanded]="isExpanded(node.id)"
-          >&gt;</span>
           <span class="folder-icon"></span>
         } @else {
           <span class="file-icon">M</span>
@@ -48,30 +57,39 @@
         <span class="name">{{ node.displayName }}</span>
       </button>
       @if (canManage()) {
-      <div class="row-actions">
         <button
-          class="tree-action add-child"
+          #menuTrigger
+          class="tree-action menu-trigger"
           type="button"
-          [attr.aria-label]="'Create document inside ' + node.displayName"
-          [title]="'Create document inside ' + node.displayName"
-          (click)="requestDocumentCreation(node)"
+          [attr.aria-label]="'Actions for ' + node.displayName"
+          [attr.aria-expanded]="activeMenu() === node.id"
+          (pointerdown)="$event.stopPropagation()"
+          (click)="toggleMenu(node.id)"
         >
           <svg viewBox="0 0 20 20" aria-hidden="true">
-            <path d="M10 4v12M4 10h12" />
+            <circle cx="4" cy="10" r="1"></circle>
+            <circle cx="10" cy="10" r="1"></circle>
+            <circle cx="16" cy="10" r="1"></circle>
           </svg>
         </button>
-        <button
-          class="tree-action delete-document"
-          type="button"
-          [attr.aria-label]="'Delete ' + node.displayName"
-          [title]="'Delete ' + node.displayName"
-          (click)="requestDocumentDeletion(node)"
-        >
-          <svg viewBox="0 0 20 20" aria-hidden="true">
-            <path d="M5.5 6.5h9M8 6.5V5h4v1.5M7 8.5v6M10 8.5v6M13 8.5v6M6.5 6.5l.5 9h6l.5-9" />
-          </svg>
-        </button>
-      </div>
+        @if (activeMenu() === node.id) {
+          <app-context-menu
+            [anchor]="menuTrigger"
+            (closed)="activeMenu.set(null)"
+          >
+            <button type="button" role="menuitem" (click)="requestDocumentCreation(node)">
+              Add child document
+            </button>
+            @if (node.children?.length) {
+              <button type="button" role="menuitem" disabled>Delete document</button>
+              <small>Delete child documents before deleting this page.</small>
+            } @else {
+              <button class="danger" type="button" role="menuitem" (click)="requestDocumentDeletion(node)">
+                Delete document
+              </button>
+            }
+          </app-context-menu>
+        }
       }
     </div>
 

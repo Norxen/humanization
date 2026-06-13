@@ -14,6 +14,7 @@ export class DocumentationStore {
   private readonly renderer = inject(MarkdownRendererService);
   private readonly repository = inject(DOCUMENT_REPOSITORY);
   private loadSequence = 0;
+  private initializationSequence = 0;
   private projectId: string | null = null;
 
   readonly manifest = signal<DocumentationManifest | null>(null);
@@ -28,12 +29,14 @@ export class DocumentationStore {
   readonly nextPage = computed(() => this.pages()[this.activePageIndex() + 1]);
 
   async initialize(projectId: string): Promise<void> {
+    const sequence = ++this.initializationSequence;
     this.projectId = projectId;
     this.loading.set(true);
     this.error.set(null);
     this.activeDocument.set(null);
     try {
       const documents = await this.repository.list(projectId);
+      if (sequence !== this.initializationSequence || this.projectId !== projectId) return;
       const manifest = this.buildRuntimeManifest(documents);
       this.manifest.set(manifest);
       const entryIndex = manifest.pages.findIndex(
@@ -41,6 +44,7 @@ export class DocumentationStore {
       );
       await this.selectPage(entryIndex === -1 ? 0 : entryIndex);
     } catch (error) {
+      if (sequence !== this.initializationSequence) return;
       this.loading.set(false);
       this.error.set(error instanceof Error ? error.message : 'Unable to load documentation.');
     }
@@ -142,8 +146,8 @@ export class DocumentationStore {
     const stored = await this.repository.create(
       this.requireProjectId(),
       path,
-      `# ${name}\n\n`,
-      this.pages().length
+      `# ${this.displayDocumentName(name)}\n\n`,
+      Math.max(-1, ...this.pages().map((page) => page.pageIndex)) + 1
     );
     const current = this.manifest();
     if (!current) {
@@ -285,7 +289,11 @@ export class DocumentationStore {
   }
 
   private fileName(path: string): string {
-    return path.split('/').at(-1)!.replace(/\.md$/i, '').replaceAll(/[-_]/g, ' ');
+    return this.displayDocumentName(path.split('/').at(-1)!.replace(/\.md$/i, ''));
+  }
+
+  private displayDocumentName(name: string): string {
+    return name.replaceAll(/[-_]/g, ' ');
   }
 
   private descriptorAsStored(page: DocumentDescriptor): StoredDocument {

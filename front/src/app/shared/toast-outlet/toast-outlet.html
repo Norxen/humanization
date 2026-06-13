@@ -1,0 +1,8 @@
+<aside class="toast-stack" aria-live="polite" aria-label="Application messages">
+  @for (toast of toasts.messages(); track toast.id) {
+    <div class="toast" [attr.data-kind]="toast.kind">
+      <span>{{ toast.message }}</span>
+      <button type="button" aria-label="Dismiss message" (click)="toasts.dismiss(toast.id)">&times;</button>
+    </div>
+  }
+</aside>

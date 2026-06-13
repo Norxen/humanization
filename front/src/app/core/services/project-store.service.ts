@@ -72,6 +72,8 @@ export class ProjectStore {
   async loadProject(projectId: string): Promise<Project> {
     this.loading.set(true);
     this.error.set(null);
+    this.activeRole.set(null);
+    this.members.set([]);
     try {
       const project = await this.repository.load(projectId);
       this.activeProject.set(project);

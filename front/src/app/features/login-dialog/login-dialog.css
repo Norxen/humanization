@@ -1,25 +1,4 @@
-:host { position: fixed; z-index: 110; inset: 0; }
-.login-backdrop {
-  width: 100%; height: 100%; display: grid; place-items: center;
-  padding: 24px; background: rgba(5, 3, 8, .78); backdrop-filter: blur(8px);
-}
-.login-dialog {
-  position: relative; width: min(420px, 100%); padding: 28px;
-  border: 1px solid var(--line); border-radius: 14px;
-  color: var(--text); background: var(--surface);
-  box-shadow: 0 28px 80px rgba(0, 0, 0, .52);
-}
-.close-login {
-  position: absolute; top: 12px; right: 12px; width: 30px; height: 30px;
-  border: 0; border-radius: 7px; color: var(--muted);
-  background: transparent; font-size: 20px; cursor: pointer;
-}
-.close-login:hover { color: var(--text); background: var(--surface-hover); }
-.login-eyebrow {
-  color: var(--accent-bright); font-size: 10px; font-weight: 800;
-  letter-spacing: .14em; text-transform: uppercase;
-}
-h2 { margin: 8px 0 10px; font-size: 23px; }
+:host { display: contents; }
 p { margin: 0; color: var(--muted); line-height: 1.55; }
 .google-login {
   width: 100%; height: 42px; display: flex; align-items: center; justify-content: center;

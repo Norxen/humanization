@@ -6,6 +6,7 @@ import { FirebaseService } from './firebase.service';
 export class AuthService {
   private readonly firebase = inject(FirebaseService);
   private authInitialization: Promise<Auth> | null = null;
+  private userGeneration = 0;
 
   readonly user = signal<User | null>(null);
   readonly isPlatformAdmin = signal(false);
@@ -28,7 +29,8 @@ export class AuthService {
     try {
       const auth = await this.initialize();
       const { signInWithEmailAndPassword } = await import('firebase/auth');
-      await signInWithEmailAndPassword(auth, email.trim(), password);
+      const credential = await signInWithEmailAndPassword(auth, email.trim(), password);
+      await this.applyUser(credential.user);
     } catch (error) {
       const message = this.authErrorMessage(error);
       this.error.set(message);
@@ -41,7 +43,8 @@ export class AuthService {
     try {
       const auth = await this.initialize();
       const { GoogleAuthProvider, signInWithPopup } = await import('firebase/auth');
-      await signInWithPopup(auth, new GoogleAuthProvider());
+      const credential = await signInWithPopup(auth, new GoogleAuthProvider());
+      await this.applyUser(credential.user);
     } catch (error) {
       const message = this.authErrorMessage(error);
       this.error.set(message);
@@ -123,6 +126,7 @@ export class AuthService {
     const auth = await this.initialize();
     const { signOut } = await import('firebase/auth');
     await signOut(auth);
+    await this.applyUser(null);
   }
 
   private async initializeAuth(): Promise<Auth> {
@@ -149,19 +153,7 @@ export class AuthService {
     await new Promise<void>((resolve) => {
       let initialized = false;
       authModule.onAuthStateChanged(auth, async (user) => {
-        this.user.set(user);
-        this.isPlatformAdmin.set(false);
-        if (user) {
-          try {
-            const firestore = await this.firebase.firestore();
-            const { doc, getDoc } = await import('firebase/firestore');
-            this.isPlatformAdmin.set(
-              (await getDoc(doc(firestore, 'platformAdmins', user.uid))).exists()
-            );
-          } catch {
-            this.isPlatformAdmin.set(false);
-          }
-        }
+        await this.applyUser(user);
         this.ready.set(true);
         if (!initialized) {
           initialized = true;
@@ -170,6 +162,24 @@ export class AuthService {
       });
     });
     return auth;
+  }
+
+  private async applyUser(user: User | null): Promise<void> {
+    const generation = ++this.userGeneration;
+    this.user.set(user);
+    this.isPlatformAdmin.set(false);
+    if (!user) return;
+
+    try {
+      const firestore = await this.firebase.firestore();
+      const { doc, getDoc } = await import('firebase/firestore');
+      const isAdmin = (await getDoc(doc(firestore, 'platformAdmins', user.uid))).exists();
+      if (generation === this.userGeneration && this.user()?.uid === user.uid) {
+        this.isPlatformAdmin.set(isAdmin);
+      }
+    } catch {
+      if (generation === this.userGeneration) this.isPlatformAdmin.set(false);
+    }
   }
 
   private authErrorMessage(error: unknown): string {

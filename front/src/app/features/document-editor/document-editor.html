@@ -111,19 +111,23 @@
 </div>
 
 @if (conflict(); as conflictState) {
-  <div class="conflict-dialog" role="dialog" aria-modal="true" aria-label="Document conflict">
+  <app-modal
+    size="large"
+    eyebrow="Save blocked"
+    title="The document changed while you were editing"
+    [dismissible]="false"
+  >
+    <p class="conflict-intro">
+      Your local draft remains unchanged. Edit it using the latest version as reference. Saving stays blocked until you make and accept a manual merge, or discard your draft.
+    </p>
     <div class="conflict-panel">
-      <header>
-        <div>
-          <span class="mode-label">Save blocked</span>
-          <h2>The document changed while you were editing</h2>
-          <p>Your draft is preserved. Start from the latest version and manually reapply the changes you want.</p>
-        </div>
-      </header>
       <div class="conflict-comparison">
         <label>
-          <span>Your unsaved draft</span>
-          <textarea readonly [value]="conflictState.local"></textarea>
+          <span>Your editable draft</span>
+          <textarea
+            [value]="body()"
+            (input)="updateBody($any($event.target).value)"
+          ></textarea>
         </label>
         <label>
           <span>Latest Firestore version</span>
@@ -131,9 +135,96 @@
         </label>
       </div>
       <footer>
-        <button type="button" class="secondary" (click)="closeConflictReference()">Keep editing current draft</button>
-        <button type="button" class="primary" (click)="continueFromLatest()">Continue from latest</button>
+        <button type="button" (click)="copyLatest()">Copy latest</button>
+        <label class="merge-acknowledgement">
+          <input
+            type="checkbox"
+            [checked]="mergeAcknowledged()"
+            (change)="mergeAcknowledged.set($any($event.target).checked)"
+          >
+          I reviewed the latest version and this edited draft is the intended replacement.
+        </label>
+        <span class="footer-spacer"></span>
+        <button type="button" (click)="latestConfirmation.set(true)">Replace draft with latest</button>
+        <button
+          type="button"
+          class="primary"
+          [disabled]="!mergeChanged() || !mergeAcknowledged()"
+          [title]="!mergeChanged() ? 'Change the local draft before accepting the merge' : (!mergeAcknowledged() ? 'Confirm that you reviewed the latest version' : '')"
+          (click)="acceptManualMerge()"
+        >Accept manual merge</button>
       </footer>
     </div>
-  </div>
+  </app-modal>
+}
+
+@if (insertDialog(); as dialog) {
+  <app-modal
+    #insertModal
+    size="small"
+    [title]="dialog === 'link' ? 'Insert link' : 'Insert image'"
+    eyebrow="Markdown content"
+    [dirty]="!!insertUrl() || !!imageAlt()"
+    (closed)="insertDialog.set(null)"
+  >
+    <form class="insert-form" (submit)="$event.preventDefault(); applyInsert()">
+      <label>
+        {{ dialog === 'link' ? 'URL or relative Markdown path' : 'Image URL' }}
+        <input
+          autofocus
+          required
+          [value]="insertUrl()"
+          (input)="insertUrl.set($any($event.target).value)"
+        >
+      </label>
+      @if (dialog === 'image') {
+        <label>
+          Alternative text
+          <input
+            [value]="imageAlt()"
+            (input)="imageAlt.set($any($event.target).value)"
+          >
+        </label>
+      }
+      <div class="insert-actions">
+        <button type="button" (click)="insertModal.requestClose()">Cancel</button>
+        <button class="primary" type="submit" [disabled]="!insertUrl().trim()">Insert</button>
+      </div>
+    </form>
+  </app-modal>
+}
+
+@if (pendingDraft()) {
+  <app-confirm-dialog
+    title="Restore unsaved draft?"
+    [message]="'A local draft exists for ' + document().descriptor.displayName + '. Restore it or discard it and continue with Firestore.'"
+    confirmLabel="Restore draft"
+    eyebrow="Draft recovery"
+    (confirmed)="restoreDraft()"
+    (cancelled)="discardDraft()"
+  />
+}
+
+@if (cancelConfirmation()) {
+  <app-confirm-dialog
+    title="Discard editing changes?"
+    message="The local draft for this document will be removed."
+    confirmLabel="Discard changes"
+    eyebrow="Unsaved document"
+    [danger]="true"
+    (confirmed)="completeCancel()"
+    (cancelled)="cancelConfirmation.set(false)"
+  />
+}
+
+@if (latestConfirmation()) {
+  <app-confirm-dialog
+    title="Replace your local draft?"
+    message="This replaces the editor content with the latest Firestore version. Copy anything you need before continuing."
+    confirmLabel="Use latest version"
+    eyebrow="Resolve conflict"
+    [danger]="true"
+    (confirmed)="confirmUseLatest()"
+    (cancelled)="latestConfirmation.set(false)"
+  />
 }

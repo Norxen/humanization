@@ -33,6 +33,18 @@
   </div>
 
   <div class="meta">
+    @if (projectOptions().length > 1) {
+      <select
+        class="mobile-project-select"
+        aria-label="Switch project"
+        [value]="activeProjectId()"
+        (change)="projectSelected.emit(projectOptions()[$any($event.target).selectedIndex])"
+      >
+        @for (project of projectOptions(); track project.id) {
+          <option [value]="project.id">{{ project.name }}</option>
+        }
+      </select>
+    }
     @if (showBack()) {
       <button class="nav-action" type="button" title="Back to projects" (click)="back.emit()">
         <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -58,7 +70,7 @@
           title="Notifications"
           aria-label="Notifications"
           [attr.aria-expanded]="notificationsOpen()"
-          (click)="notificationsOpen.set(!notificationsOpen())"
+          (click)="toggleNotifications()"
         >
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"></path>
@@ -72,10 +84,17 @@
             <header>
               <strong>Notifications</strong>
               @if (notifications.unreadCount()) {
-                <button type="button" (click)="notifications.markAllRead()">Mark all read</button>
+                <button type="button" [disabled]="markingAllRead()" (click)="markAllNotificationsRead()">
+                  {{ markingAllRead() ? 'Updating...' : 'Mark all read' }}
+                </button>
               }
             </header>
             <div class="notification-list">
+              @if (notifications.loading()) {
+                <p>Loading notifications...</p>
+              } @else if (notifications.error(); as error) {
+                <p class="notification-error">{{ error }}</p>
+              } @else {
               @for (notification of notifications.notifications(); track notification.id) {
                 <button
                   type="button"
@@ -88,6 +107,7 @@
                 </button>
               } @empty {
                 <p>No notifications yet.</p>
+              }
               }
             </div>
           </section>

@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { pendingChangesGuard } from './core/guards/pending-changes.guard';
 
 export const routes: Routes = [
   {
@@ -12,6 +13,7 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/project-workspace/project-workspace')
         .then((module) => module.ProjectWorkspace),
+    canDeactivate: [pendingChangesGuard],
     title: 'Manuscript | Project'
   },
   { path: '**', redirectTo: '' }

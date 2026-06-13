@@ -56,18 +56,11 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 .pane-heading small { color: var(--muted); font-size: 9px; font-weight: 500; letter-spacing: 0; text-transform: none; }
 .preview-pane { overflow: hidden; background: var(--background); }
 .editor-preview { flex: 1; padding: 30px clamp(24px,5vw,64px) 80px; overflow: auto; }
-.conflict-dialog {
-  position: fixed; z-index: 110; inset: 0; display: grid; place-items: center; padding: 24px;
-  background: rgba(5,3,8,.88); backdrop-filter: blur(12px);
-}
 .conflict-panel {
-  width: min(1300px,100%); max-height: calc(100vh - 48px); display: flex; flex-direction: column;
-  overflow: hidden; border: 1px solid var(--line-strong); border-radius: 14px;
-  background: var(--surface); box-shadow: 0 34px 100px rgba(0,0,0,.58);
+  display: flex; flex-direction: column; overflow: hidden;
+  border: 1px solid var(--line); border-radius: 10px;
 }
-.conflict-panel header { padding: 20px 22px; border-bottom: 1px solid var(--line); }
-.conflict-panel h2 { margin: 12px 0 6px; color: var(--ink); font-size: 20px; }
-.conflict-panel p { margin: 0; color: var(--muted); font-size: 12px; }
+.conflict-intro { margin: 0 0 16px; color: var(--muted); line-height: 1.6; }
 .conflict-comparison { min-height: 0; display: grid; grid-template-columns: 1fr 1fr; }
 .conflict-comparison label { min-width: 0; display: flex; flex-direction: column; }
 .conflict-comparison label + label { border-left: 1px solid var(--line); }
@@ -80,6 +73,18 @@ button:disabled { opacity: .45; cursor: not-allowed; }
   color: #ddd4e5; background: #0d0a12; font: 12px/1.65 Consolas,monospace;
 }
 .conflict-panel footer { justify-content: flex-end; padding: 12px 16px; border-top: 1px solid var(--line); }
+.merge-acknowledgement {
+  max-width: 390px; display: flex; align-items: flex-start; gap: 8px;
+  color: var(--muted); font-size: 11px; line-height: 1.45;
+}
+.merge-acknowledgement input { margin-top: 2px; }
+.footer-spacer { flex: 1; }
+.insert-form label { display: grid; gap: 7px; margin-bottom: 15px; color: var(--muted); font-size: 12px; }
+.insert-form input {
+  width: 100%; height: 42px; padding: 0 11px; border: 1px solid var(--line);
+  border-radius: 7px; color: var(--ink); background: var(--background);
+}
+.insert-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 22px; }
 @media(max-width:760px) {
   .editor-toolbar { align-items: flex-start; flex-direction: column; }
   .editor-actions { width: 100%; }

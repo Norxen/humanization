@@ -1,0 +1,23 @@
+<app-modal
+  size="small"
+  [title]="title()"
+  [eyebrow]="eyebrow()"
+  [pending]="pending()"
+  [alert]="danger()"
+  (closed)="cancelled.emit()"
+>
+  <p>{{ message() }}</p>
+  @if (error(); as errorMessage) {
+    <p class="confirmation-error" role="alert">{{ errorMessage }}</p>
+  }
+  <div class="actions">
+    <button type="button" [disabled]="pending()" (click)="cancelled.emit()">Cancel</button>
+    <button
+      type="button"
+      [class.danger]="danger()"
+      [class.primary]="!danger()"
+      [disabled]="pending()"
+      (click)="confirmed.emit()"
+    >{{ pending() ? 'Working...' : confirmLabel() }}</button>
+  </div>
+</app-modal>

@@ -22,6 +22,9 @@ import { DocumentConflictError } from '../../core/repositories/document.reposito
 import { ProjectMembership } from '../../core/models/project.model';
 import { VisualMarkdownEditor } from './visual-markdown-editor';
 import { SourceMarkdownEditor } from './source-markdown-editor';
+import { Modal } from '../../shared/modal/modal';
+import { ConfirmDialog } from '../../shared/confirm-dialog/confirm-dialog';
+import { ToastService } from '../../core/services/toast.service';
 
 interface LocalDraft {
   body: string;
@@ -35,7 +38,7 @@ interface ValidationResult {
 
 @Component({
   selector: 'app-document-editor',
-  imports: [VisualMarkdownEditor, SourceMarkdownEditor],
+  imports: [VisualMarkdownEditor, SourceMarkdownEditor, Modal, ConfirmDialog],
   templateUrl: './document-editor.html',
   styleUrl: './document-editor.css'
 })
@@ -44,6 +47,7 @@ export class DocumentEditor implements OnInit, OnDestroy {
   @ViewChild(SourceMarkdownEditor) private sourceEditor?: SourceMarkdownEditor;
   private readonly renderer = inject(MarkdownRendererService);
   private readonly store = inject(DocumentationStore);
+  private readonly toasts = inject(ToastService);
   private previewTimer: ReturnType<typeof setTimeout> | null = null;
 
   readonly document = input.required<LoadedDocument>();
@@ -62,8 +66,19 @@ export class DocumentEditor implements OnInit, OnDestroy {
   readonly saveError = signal<string | null>(null);
   readonly conflict = signal<{ local: string; latest: StoredDocument } | null>(null);
   readonly mode = signal<'edit' | 'markdown' | 'preview'>('edit');
+  readonly insertDialog = signal<'link' | 'image' | null>(null);
+  readonly insertUrl = signal('');
+  readonly imageAlt = signal('');
+  readonly cancelConfirmation = signal(false);
+  readonly latestConfirmation = signal(false);
+  readonly mergeAcknowledged = signal(false);
+  readonly pendingDraft = signal<LocalDraft | null>(null);
   readonly validation = computed(() => this.validate(this.body()));
   readonly dirty = computed(() => this.body() !== this.baseBody());
+  readonly mergeChanged = computed(() => {
+    const conflict = this.conflict();
+    return Boolean(conflict) && this.body() !== conflict!.local;
+  });
   readonly canSave = computed(
     () => this.dirty() && this.validation().valid && !this.saving() && !this.conflict()
   );
@@ -71,22 +86,10 @@ export class DocumentEditor implements OnInit, OnDestroy {
   ngOnInit(): void {
     const current = this.document();
     const draft = this.readDraft(current.descriptor.path);
-    let body = current.markdown;
-    let version = current.version;
-
-    if (
-      draft &&
-      window.confirm(`Restore the unsaved draft for "${current.descriptor.displayName}"?`)
-    ) {
-      body = draft.body;
-      version = draft.baseVersion;
-    } else if (draft) {
-      this.clearDraft();
-    }
-
-    this.body.set(body);
+    this.pendingDraft.set(draft);
+    this.body.set(current.markdown);
     this.baseBody.set(current.markdown);
-    this.baseVersion.set(version);
+    this.baseVersion.set(current.version);
     this.dirtyChanged.emit(this.dirty());
     this.schedulePreview();
   }
@@ -114,6 +117,13 @@ export class DocumentEditor implements OnInit, OnDestroy {
   }
 
   runToolbar(command: string): void {
+    if (command === 'link' || command === 'image') {
+      if (this.mode() === 'preview') this.setMode('edit');
+      this.insertUrl.set('');
+      this.imageAlt.set('');
+      this.insertDialog.set(command);
+      return;
+    }
     if (command === 'search') {
       this.setMode('markdown');
       setTimeout(() => this.sourceEditor?.openSearch());
@@ -156,6 +166,7 @@ export class DocumentEditor implements OnInit, OnDestroy {
       this.saved.emit(saved);
     } catch (error) {
       if (error instanceof DocumentConflictError) {
+        this.mergeAcknowledged.set(false);
         this.conflict.set({
           local: this.body(),
           latest: error.latest
@@ -169,30 +180,88 @@ export class DocumentEditor implements OnInit, OnDestroy {
   }
 
   cancel(): void {
-    if (this.dirty() && !window.confirm('Discard the unsaved changes to this document?')) {
+    if (this.dirty()) {
+      this.cancelConfirmation.set(true);
       return;
     }
+    this.completeCancel();
+  }
+
+  completeCancel(): void {
     this.clearDraft();
     this.dirtyChanged.emit(false);
+    this.cancelConfirmation.set(false);
     this.cancelled.emit();
   }
 
-  continueFromLatest(): void {
+  acceptManualMerge(): void {
     const conflict = this.conflict();
-    if (!conflict) {
-      return;
-    }
+    if (!conflict || !this.mergeChanged() || !this.mergeAcknowledged()) return;
+    this.baseBody.set(conflict.latest.body);
+    this.baseVersion.set(conflict.latest.version);
+    this.conflict.set(null);
+    this.mergeAcknowledged.set(false);
+    this.saveDraft();
+    this.dirtyChanged.emit(this.dirty());
+    this.schedulePreview();
+    this.toasts.info('Manual merge accepted. Review the result, then save it as a new version.');
+  }
 
+  confirmUseLatest(): void {
+    const conflict = this.conflict();
+    if (!conflict) return;
     this.body.set(conflict.latest.body);
     this.baseBody.set(conflict.latest.body);
     this.baseVersion.set(conflict.latest.version);
-    this.saveDraft();
+    this.conflict.set(null);
+    this.latestConfirmation.set(false);
+    this.mergeAcknowledged.set(false);
+    this.clearDraft();
     this.dirtyChanged.emit(false);
+    this.schedulePreview();
+    this.toasts.success('Loaded the latest Firestore version.');
+  }
+
+  restoreDraft(): void {
+    const draft = this.pendingDraft();
+    if (!draft) return;
+    this.body.set(draft.body);
+    this.baseVersion.set(draft.baseVersion);
+    this.pendingDraft.set(null);
+    this.dirtyChanged.emit(this.dirty());
     this.schedulePreview();
   }
 
-  closeConflictReference(): void {
-    this.conflict.set(null);
+  discardDraft(): void {
+    this.pendingDraft.set(null);
+    this.clearDraft();
+  }
+
+  applyInsert(): void {
+    const dialog = this.insertDialog();
+    const url = this.insertUrl().trim();
+    if (!dialog || !url) return;
+    if (this.mode() === 'markdown') {
+      dialog === 'link'
+        ? this.sourceEditor?.insertLink(url)
+        : this.sourceEditor?.insertImage(url, this.imageAlt().trim());
+    } else {
+      dialog === 'link'
+        ? this.visualEditor?.insertLink(url)
+        : this.visualEditor?.insertImage(url, this.imageAlt().trim());
+    }
+    this.insertDialog.set(null);
+  }
+
+  async copyLatest(): Promise<void> {
+    const latest = this.conflict()?.latest.body;
+    if (!latest) return;
+    try {
+      await navigator.clipboard.writeText(latest);
+      this.toasts.success('Latest version copied to the clipboard.');
+    } catch {
+      this.toasts.error('The browser could not copy the latest version.');
+    }
   }
 
   handlePreviewClick(event: MouseEvent): void {

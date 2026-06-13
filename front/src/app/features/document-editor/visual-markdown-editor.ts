@@ -233,8 +233,8 @@ export class VisualMarkdownEditor implements AfterViewInit, OnDestroy {
       table: () => this.editor!.action(callCommand(insertTableCommand.key, { row: 3, col: 3 })),
       undo: () => this.runHistory(undo),
       redo: () => this.runHistory(redo),
-      link: () => this.addLink(),
-      image: () => this.addImage()
+      link: () => undefined,
+      image: () => undefined
     };
     actions[command]();
     this.focus();
@@ -242,6 +242,18 @@ export class VisualMarkdownEditor implements AfterViewInit, OnDestroy {
 
   focus(): void {
     this.editor?.action((ctx) => ctx.get(editorViewCtx).focus());
+  }
+
+  insertLink(href: string): void {
+    if (!this.editor) return;
+    this.editor.action(callCommand(toggleLinkCommand.key, { href }));
+    this.focus();
+  }
+
+  insertImage(src: string, alt: string): void {
+    if (!this.editor) return;
+    this.editor.action(callCommand(insertImageCommand.key, { src, alt }));
+    this.focus();
   }
 
   refreshCompletion(): void {
@@ -329,21 +341,6 @@ export class VisualMarkdownEditor implements AfterViewInit, OnDestroy {
       view.focus();
     });
     this.closeCompletion();
-  }
-
-  private addLink(): void {
-    if (!this.editor) return;
-    const href = window.prompt('Link URL or relative Markdown path:', '');
-    if (!href) return;
-    this.editor.action(callCommand(toggleLinkCommand.key, { href }));
-  }
-
-  private addImage(): void {
-    if (!this.editor) return;
-    const src = window.prompt('Image URL:', '');
-    if (!src) return;
-    const alt = window.prompt('Alternative text:', '') ?? '';
-    this.editor.action(callCommand(insertImageCommand.key, { src, alt }));
   }
 
   private insertTaskItem(): void {

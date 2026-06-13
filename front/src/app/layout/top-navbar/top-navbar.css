@@ -29,8 +29,10 @@
 .notification-panel header button {
   border: 0; color: var(--accent-bright); background: transparent; font: inherit; cursor: pointer;
 }
+.notification-panel header button:disabled { opacity: .5; cursor: wait; }
 .notification-list { max-height: 390px; overflow: auto; }
 .notification-list > p { margin: 0; padding: 24px; color: var(--muted); text-align: center; }
+.notification-list > p.notification-error { color: #fb7185; }
 .notification-item {
   width: 100%; display: grid; gap: 5px; padding: 12px 14px;
   border: 0; border-bottom: 1px solid var(--line); color: var(--ink);
@@ -113,6 +115,7 @@
   stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round;
 }
 .menu-button { display: none; }
+.mobile-project-select { display: none; }
 @media (max-width: 1080px) {
   .topbar { grid-template-columns: minmax(200px, 1fr) auto minmax(200px, 1fr); }
   .nav-action span { display: none; }
@@ -124,6 +127,13 @@
 @media (max-width:820px) {
   .topbar { grid-template-columns: minmax(0, 1fr) auto; padding: 0 12px; }
   .workspace-info { display: none; }
+  .mobile-project-select {
+    width: min(118px, 28vw); height: 34px; display: block; padding: 0 24px 0 9px;
+    overflow: hidden; border: 1px solid var(--line); border-radius: 8px;
+    color: var(--ink); background: var(--surface-raised);
+    font: inherit; font-size: 10px; font-weight: 650; text-overflow: ellipsis; cursor: pointer;
+  }
+  .mobile-project-select option { color: var(--ink); background: var(--surface); }
   .menu-button {
     width: 32px; height: 32px; display: flex; flex: none; flex-direction: column;
     justify-content: center; gap: 4px; padding: 8px;
@@ -137,6 +147,7 @@
 }
 @media (max-width:560px) {
   .brand-name { font-size: 12px; }
+  .mobile-project-select { width: min(88px, 24vw); }
   .password-action span { display: none; }
   .password-action { width: 34px; padding: 0; }
 }

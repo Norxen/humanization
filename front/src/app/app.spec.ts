@@ -53,8 +53,24 @@ class FakeAuthService {
   );
   readonly ready = signal(true);
   initialize(): Promise<any> { return Promise.resolve({}); }
-  login(): Promise<void> { return Promise.resolve(); }
-  loginWithGoogle(): Promise<void> { return Promise.resolve(); }
+  login(email: string): Promise<void> {
+    this.user.set({
+      uid: 'admin-user',
+      email,
+      providerData: [{ providerId: 'password' }]
+    });
+    this.isPlatformAdmin.set(true);
+    return Promise.resolve();
+  }
+  loginWithGoogle(): Promise<void> {
+    this.user.set({
+      uid: 'admin-user',
+      email: 'admin@example.com',
+      providerData: [{ providerId: 'google.com' }]
+    });
+    this.isPlatformAdmin.set(true);
+    return Promise.resolve();
+  }
   changePassword(): Promise<void> { return Promise.resolve(); }
   setPassword(): Promise<void> {
     const user = this.user();
@@ -221,15 +237,15 @@ describe('multi-project Manuscript', () => {
     const loginButton = fixture.nativeElement.querySelector('.login-button') as HTMLButtonElement;
     loginButton.click();
     fixture.detectChanges();
-    const dialog = fixture.nativeElement.querySelector('.login-dialog') as HTMLElement;
-    const backdrop = fixture.nativeElement.querySelector('.login-backdrop') as HTMLElement;
+    const dialog = fixture.nativeElement.querySelector('.modal-panel') as HTMLElement;
+    const backdrop = fixture.nativeElement.querySelector('.modal-backdrop') as HTMLElement;
     dialog.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
     fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('.login-dialog')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('.modal-panel')).toBeTruthy();
 
     backdrop.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
     fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('.login-dialog')).toBeFalsy();
+    expect(fixture.nativeElement.querySelector('.modal-panel')).toBeFalsy();
   });
 
   it('allows a Google-only account to add password login', async () => {
@@ -251,19 +267,19 @@ describe('multi-project Manuscript', () => {
       .find((button: HTMLButtonElement) => button.textContent?.trim() === 'Set password') as HTMLButtonElement;
     setPasswordButton.click();
     fixture.detectChanges();
-    const inputs = fixture.nativeElement.querySelectorAll('.login-dialog input');
+    const inputs = fixture.nativeElement.querySelectorAll('.modal-panel input');
     expect(inputs).toHaveLength(2);
     for (const input of inputs) {
       input.value = 'secure-password';
       input.dispatchEvent(new Event('input'));
     }
-    (fixture.nativeElement.querySelector('.login-dialog form') as HTMLFormElement)
+    (fixture.nativeElement.querySelector('.modal-panel form') as HTMLFormElement)
       .dispatchEvent(new Event('submit'));
 
     await vi.waitFor(() => {
       fixture.detectChanges();
       expect(auth.canChangePassword()).toBe(true);
-      expect(fixture.nativeElement.querySelector('.login-dialog')).toBeFalsy();
+      expect(fixture.nativeElement.querySelector('.modal-panel')).toBeFalsy();
     });
   });
 
@@ -280,6 +296,35 @@ describe('multi-project Manuscript', () => {
     expect(fixture.nativeElement.querySelectorAll('.tree-row')).toHaveLength(2);
     expect(fixture.nativeElement.querySelector('h1')?.textContent).toContain('Index');
     expect(fixture.nativeElement.textContent).toContain('Project entry point.');
+  });
+
+  it('refreshes project permissions after signing in from an open workspace', async () => {
+    auth.user.set(null);
+    auth.isPlatformAdmin.set(false);
+    const fixture = TestBed.createComponent(App);
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/projects/project-1/example-game');
+    fixture.detectChanges();
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('.login-button')).toBeTruthy();
+      expect(fixture.nativeElement.querySelector('.edit-button')).toBeFalsy();
+    });
+
+    (fixture.nativeElement.querySelector('.login-button') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    const inputs = fixture.nativeElement.querySelectorAll('.modal-panel input');
+    inputs[0].value = 'admin@example.com';
+    inputs[0].dispatchEvent(new Event('input'));
+    inputs[1].value = 'password';
+    inputs[1].dispatchEvent(new Event('input'));
+    (fixture.nativeElement.querySelector('.modal-panel form') as HTMLFormElement)
+      .dispatchEvent(new Event('submit'));
+
+    await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('.modal-panel')).toBeFalsy();
+    expect(fixture.nativeElement.querySelector('.edit-button')).toBeTruthy();
+    expect(fixture.nativeElement.textContent).toContain('Settings');
   });
 
   it('corrects stale decorative slugs', async () => {
